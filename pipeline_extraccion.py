@@ -200,8 +200,7 @@ def nombre_variable_real(ds, candidatos):
 
 
 def abrir_dataset(archivos):
-    return xr.open_mfdataset(archivos, combine="nested", concat_dim="time", parallel=True)
-
+    return xr.open_mfdataset(archivos, combine="nested", concat_dim="time", parallel=False)
 
 def extraer_serie_punto(archivos, var_candidatos, lat, lon):
     valores, fechas, var_real = [], [], None
