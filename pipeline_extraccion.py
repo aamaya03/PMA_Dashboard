@@ -111,21 +111,23 @@ def buscar_id_por_ruta(servicio, partes_ruta, id_padre="root"):
     return actual
 
 def listar_archivos_en_carpeta(servicio, carpeta_id):
-    """Devuelve {nombre_archivo: file_id} de una carpeta (una sola página;
-    si tienes miles de archivos por carpeta, hay que paginar con pageToken)."""
+    """Devuelve {nombre_archivo: file_id_real} de una carpeta (una sola
+    página; si tienes miles de archivos por carpeta, hay que paginar con
+    pageToken). Si algún archivo es en realidad un acceso directo, sigue
+    el enlace y guarda el id del archivo real, no el del acceso directo."""
     archivos = {}
     page_token = None
     while True:
         resultado = servicio.files().list(
             q=f"'{carpeta_id}' in parents and trashed = false",
-            fields="nextPageToken, files(id, name)",
+            fields="nextPageToken, files(id, name, mimeType)",
             pageToken=page_token,
             pageSize=1000,
             supportsAllDrives=True,
             includeItemsFromAllDrives=True,
         ).execute()
         for f in resultado.get("files", []):
-            archivos[f["name"]] = f["id"]
+            archivos[f["name"]] = resolver_destino_si_es_atajo(servicio, f)
         page_token = resultado.get("nextPageToken")
         if not page_token:
             break
@@ -133,7 +135,7 @@ def listar_archivos_en_carpeta(servicio, carpeta_id):
 
 
 def descargar_archivo(servicio, file_id, destino_local):
-    if os.path.exists(destino_local):
+    if os.path.exists(destino_local) and os.path.getsize(destino_local) > 10_000:
         return destino_local
     request = servicio.files().get_media(fileId=file_id)
     with io.FileIO(destino_local, "wb") as fh:
@@ -141,6 +143,13 @@ def descargar_archivo(servicio, file_id, destino_local):
         listo = False
         while not listo:
             _, listo = downloader.next_chunk()
+    tamano = os.path.getsize(destino_local)
+    if tamano < 10_000:
+        raise IOError(
+            f"El archivo descargado '{destino_local}' pesa solo {tamano} bytes — "
+            "probablemente Drive no entregó el contenido real (revisa si sigue siendo un acceso "
+            "directo sin resolver, o si el archivo original está vacío)."
+        )
     return destino_local
 
 
