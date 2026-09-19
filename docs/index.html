@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Monitoreo climático — municipios PMA</title>
+<title>Monitoreo Climático</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -40,12 +40,15 @@
   body { margin: 0; background: var(--color-bg); color: var(--color-ink); font-family: var(--font-body); line-height: 1.5; }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 20px 60px; }
   header h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 0 0 6px; }
-  header p { color: var(--color-ink-soft); margin: 0 0 24px; max-width: 66ch; font-size: 0.95rem; }
+  header p { color: var(--color-ink-soft); margin: 0; max-width: 60ch; font-size: 0.95rem; }
+
+  .header-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 28px; }
+  .header-row header { flex: 1; min-width: 280px; }
 
   .enso-panel {
-    display: inline-flex; gap: 10px; align-items: center;
+    display: inline-flex; gap: 10px; align-items: center; flex-shrink: 0;
     background: var(--color-panel); border: 1px solid var(--color-line); border-radius: var(--radius);
-    padding: 8px 14px 8px 8px; margin-bottom: 24px;
+    padding: 8px 14px 8px 8px;
   }
   .enso-panel svg { display: block; }
   .enso-texto { font-size: 0.78rem; line-height: 1.3; }
@@ -59,8 +62,8 @@
   .field label { font-size: 0.78rem; color: var(--color-ink-soft); }
   select { font-family: var(--font-body); font-size: 0.92rem; padding: 8px 10px;
     border: 1px solid var(--color-line); border-radius: 4px; background: var(--color-bg); color: var(--color-ink); min-width: 180px; }
-  .fuente-chip { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--color-ink-soft); }
-  .fuente-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-rain); }
+  .fuente-chip { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--color-ink-soft); }
+  .fuente-chip .chulito { color: #2E7D4F; font-weight: 700; }
 
   .cards { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
   .card { flex: 1; min-width: 200px; background: var(--color-panel); border: 1px solid var(--color-line);
@@ -94,16 +97,18 @@
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>Monitoreo climático para agricultores</h1>
-    <p>Lluvia, temperatura y humedad relativa de los últimos días, calculadas a partir de datos satelitales (MSWX / MSWEP) para cada municipio.</p>
-  </header>
+  <div class="header-row">
+    <header>
+      <h1>Monitoreo Climático</h1>
+      <p>Lluvia, temperatura y humedad relativa de los últimos días, calculadas a partir de datos satelitales (MSWX / MSWEP) para cada municipio.</p>
+    </header>
 
-  <div class="enso-panel">
-    <div id="enso-gauge"></div>
-    <div class="enso-texto">
-      <div class="fase" id="enso-fase-texto"></div>
-      <div class="detalle" id="enso-detalle"></div>
+    <div class="enso-panel">
+      <div id="enso-gauge"></div>
+      <div class="enso-texto">
+        <div class="fase" id="enso-fase-texto"></div>
+        <div class="detalle" id="enso-detalle"></div>
+      </div>
     </div>
   </div>
 
@@ -111,7 +116,7 @@
     <div class="field"><label for="sel-municipio">Municipio</label><select id="sel-municipio"></select></div>
     <div class="field"><label for="sel-periodo">Período</label><select id="sel-periodo"></select></div>
     <div class="field"><label for="sel-variable">Variable</label><select id="sel-variable"></select></div>
-    <div class="fuente-chip"><span class="dot"></span><span id="fuente-fecha">Actualizado —</span></div>
+    <div class="fuente-chip"><span class="chulito">✓</span><span id="fuente-fecha">Actualizado —</span></div>
   </div>
 
   <div class="cards" id="cards"></div>
@@ -131,11 +136,11 @@
       </div>
     </div>
     <div class="mapa-grid" id="mapa-grid"><div id="mapa-svg-container"></div></div>
-    <div class="mapa-nota">Totales para el período seleccionado arriba (<span id="mapa-periodo-actual"></span>). Cada municipio monitoreado muestra su propia variación espacial (grilla de ejemplo — el pipeline real debe recortar el ráster completo por municipio, no solo el centroide). Categorías definidas en el código. El municipio con borde rojo es el seleccionado arriba; también puedes hacer clic en una forma para seleccionarlo.</div>
+    <div class="mapa-nota">Totales para el período seleccionado arriba (<span id="mapa-periodo-actual"></span>). Categorías: <span id="mapa-rangos"></span>. El municipio con borde rojo es el seleccionado arriba; también puedes hacer clic en una forma para seleccionarlo.</div>
   </div>
 
   <footer>
-    Fuente satelital: GloH2O (MSWX / MSWEP). Condición ENSO: NOAA Climate Prediction Center (índice ONI / diagnóstico ENSO mensual). Los reportes de campo, cuando estén disponibles, se muestran como puntos superpuestos sobre la serie satelital.
+    Fuente satelital: GloH2O (MSWX / MSWEP). Condición ENSO: NOAA Climate Prediction Center (índice ONI / diagnóstico ENSO mensual).
   </footer>
 </div>
 
@@ -324,10 +329,10 @@ const MESES_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","n
    UMBRALES DE EJEMPLO — se editan aquí en el código, no desde la interfaz.
    Cámbialos cuando tengas los valores reales para cada municipio/variable.
    ------------------------------------------------------------------------ */
-const UMBRAL_TMAX = 35;              // °C — días de calor
+const UMBRAL_TMAX = 30;              // °C — días de calor
 const UMBRAL_HR = 80;                // % — días de humedad alta
-const UMBRAL_LLUVIA_MODERADA = 30;   // mm acumulados en el período -> categoría "Moderada"
-const UMBRAL_LLUVIA_FUERTE = 70;     // mm acumulados en el período -> categoría "Fuerte"
+const UMBRAL_LLUVIA_MODERADA = 15;   // mm — categoría "Moderada" (IDEAM: lluvia moderada 15-40 mm)
+const UMBRAL_LLUVIA_FUERTE = 40;     // mm — categoría "Fuerte" (IDEAM: lluvia fuerte 40-70 mm)
 
 function fechaEs(iso) {
   const [y, m, d] = iso.split("-").map(Number);
@@ -478,10 +483,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       $cards.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      $cards.append(tarjeta(`Días con Tmáx > ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "Umbral de ejemplo, definido en el código", "--color-temp"));
-    }
-    if (ind.amplitud_promedio !== undefined) {
-      $cards.append(tarjeta("Amplitud térmica", `${ind.amplitud_promedio.toFixed(1)} °C`, `Diferencia día/noche · mayor el ${fechaEs(ind.amplitud_max.date)} (${ind.amplitud_max.value.toFixed(1)} °C)`, "--color-temp"));
+      $cards.append(tarjeta(`Días con Tmáx > ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "", "--color-temp"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
@@ -490,7 +492,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
       $cards.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        $cards.append(tarjeta(`Días con HR > ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "Umbral de ejemplo, definido en el código", "--color-relhum"));
+        $cards.append(tarjeta(`Días con HR > ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "", "--color-relhum"));
       }
     }
   }
@@ -500,21 +502,21 @@ function estiloEjeFecha() { return { tickformat: "%d-%b", tickfont: { size: 11 }
 
 function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida) {
   const layoutBase = {
-    margin: { t: 10, r: 20, b: 40, l: 50 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+    margin: { t: 36, r: 20, b: 40, l: 50 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
     font: { family: "Work Sans, sans-serif", color: getComputedStyle(document.body).getPropertyValue("--color-ink") },
     xaxis: estiloEjeFecha(), showlegend: true, legend: { orientation: "h", y: -0.2 }, height: 380,
   };
 
   if (variableElegida === "Lluvia") {
     const serie = vars.precip.slice(-diasPeriodo);
-    const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), type: "bar", name: "Lluvia diaria", marker: { color: "#1D5A8C" } }];
+    const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), type: "bar", name: "Lluvia diaria", marker: { color: "#1D5A8C" }, hovertemplate: "%{x}<br>%{y:.1f} mm<extra></extra>" }];
     Plotly.newPlot("chart", traces, { ...layoutBase, yaxis: { title: "mm/día" }, title: { text: "Lluvia diaria", font: { size: 13 } } }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Temperatura") {
     const tavg = vars.tavg.slice(-diasPeriodo), tmin = vars.tmin.slice(-diasPeriodo), tmax = vars.tmax.slice(-diasPeriodo);
     const traces = [
       { x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines", line: { width: 0 }, showlegend: false, hoverinfo: "skip" },
-      { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines", fill: "tonexty", fillcolor: "rgba(217,127,43,0.15)", line: { width: 0 }, name: "Rango mín–máx del día" },
-      { x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5 }, marker: { size: 5 }, name: "Temperatura promedio" },
+      { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines", fill: "tonexty", fillcolor: "rgba(217,127,43,0.15)", line: { width: 0 }, name: "Rango mín–máx del día", hoverinfo: "skip" },
+      { x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5 }, marker: { size: 5 }, name: "Temperatura promedio", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
     ];
     Plotly.newPlot("chart", traces, {
       ...layoutBase, yaxis: { title: "°C" },
@@ -523,7 +525,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
     }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Humedad relativa") {
     const serie = vars.relhum.slice(-diasPeriodo);
-    const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), mode: "lines+markers", line: { color: "#4FA8C9", width: 2.5 }, marker: { size: 5 }, name: "Humedad relativa" }];
+    const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), mode: "lines+markers", line: { color: "#4FA8C9", width: 2.5 }, marker: { size: 5 }, name: "Humedad relativa", hovertemplate: "%{x}<br>%{y:.0f}%<extra></extra>" }];
     Plotly.newPlot("chart", traces, {
       ...layoutBase, yaxis: { title: "%" },
       shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_HR, y1: UMBRAL_HR, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
@@ -598,6 +600,8 @@ function categoriaLluvia(total) {
 const $mapaGrid = document.getElementById("mapa-svg-container");
 const $mapaTitulo = document.getElementById("mapa-titulo");
 const $mapaPeriodoActual = document.getElementById("mapa-periodo-actual");
+document.getElementById("mapa-rangos").textContent =
+  `Normal < ${UMBRAL_LLUVIA_MODERADA} mm · Moderada ${UMBRAL_LLUVIA_MODERADA}-${UMBRAL_LLUVIA_FUERTE} mm · Fuerte ≥ ${UMBRAL_LLUVIA_FUERTE} mm`;
 const $btnMapaZoom = document.getElementById("btn-mapa-zoom");
 
 let mapaZoomMunicipio = true; // por defecto, acercado al municipio seleccionado
