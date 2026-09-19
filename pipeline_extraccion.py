@@ -66,16 +66,20 @@ def autenticar_drive():
     )
     return build("drive", "v3", credentials=creds)
 
-
 def buscar_id_por_ruta(servicio, partes_ruta, id_padre="root"):
     """Camina la ruta de carpetas por nombre (como en el Explorador de Drive)
-    y devuelve el id de la última carpeta."""
+    y devuelve el id de la última carpeta. El primer nivel se busca sin
+    restringir por carpeta padre, porque una carpeta compartida directamente
+    con la cuenta de servicio no cuelga de su propio 'root'."""
     actual = id_padre
     for nombre in partes_ruta:
-        query = (
-            f"name = '{nombre}' and '{actual}' in parents "
-            "and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-        )
+        if actual == "root":
+            query = f"name = '{nombre}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+        else:
+            query = (
+                f"name = '{nombre}' and '{actual}' in parents "
+                "and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            )
         resultado = servicio.files().list(
             q=query, fields="files(id, name)", supportsAllDrives=True, includeItemsFromAllDrives=True
         ).execute()
@@ -84,7 +88,6 @@ def buscar_id_por_ruta(servicio, partes_ruta, id_padre="root"):
             raise FileNotFoundError(f"No se encontró la carpeta '{nombre}' dentro de la ruta {partes_ruta}")
         actual = archivos[0]["id"]
     return actual
-
 
 def listar_archivos_en_carpeta(servicio, carpeta_id):
     """Devuelve {nombre_archivo: file_id} de una carpeta (una sola página;
