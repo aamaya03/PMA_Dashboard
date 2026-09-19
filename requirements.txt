@@ -1,0 +1,9 @@
+xarray
+netCDF4
+pandas
+numpy
+geopandas
+rioxarray
+shapely
+google-api-python-client
+google-auth
