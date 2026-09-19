@@ -1,0 +1,43 @@
+name: Actualizar dashboard de monitoreo
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # todos los días a las 11:00 UTC (~6:00 am Colombia)
+  workflow_dispatch: {}     # botón "Run workflow" manual, para probar sin esperar al cron
+
+permissions:
+  contents: write
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Correr el pipeline de extracción
+        env:
+          GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        run: python pipeline_extraccion.py
+
+      - name: Copiar salidas a la carpeta publicada (docs/)
+        run: |
+          mkdir -p docs
+          cp data.json docs/data.json
+          cp dashboard-monitoreo.html docs/index.html
+
+      - name: Publicar cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/data.json docs/index.html
+          git diff --staged --quiet || git commit -m "Actualizar datos de monitoreo climático"
+          git push
