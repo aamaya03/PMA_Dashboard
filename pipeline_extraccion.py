@@ -66,27 +66,48 @@ def autenticar_drive():
     )
     return build("drive", "v3", credentials=creds)
 
+def resolver_destino_si_es_atajo(servicio, archivo):
+    """Si el archivo es un acceso directo (shortcut), sigue el enlace y
+    devuelve el id de la carpeta/archivo real al que apunta."""
+    if archivo.get("mimeType") == "application/vnd.google-apps.shortcut":
+        detalle = servicio.files().get(
+            fileId=archivo["id"], fields="shortcutDetails", supportsAllDrives=True
+        ).execute()
+        return detalle["shortcutDetails"]["targetId"]
+    return archivo["id"]
+
+
 def buscar_id_por_ruta(servicio, partes_ruta, id_padre="root"):
-    """Camina la ruta de carpetas por nombre (como en el Explorador de Drive)
-    y devuelve el id de la última carpeta. El primer nivel se busca sin
-    restringir por carpeta padre, porque una carpeta compartida directamente
-    con la cuenta de servicio no cuelga de su propio 'root'."""
+    """Camina la ruta de carpetas por nombre (como en el Explorador de Drive),
+    siguiendo accesos directos (shortcuts) cuando los encuentra, y devuelve
+    el id de la última carpeta. El primer nivel se busca sin restringir por
+    carpeta padre, porque una carpeta compartida directamente con la cuenta
+    de servicio no cuelga de su propio 'root'."""
     actual = id_padre
     for nombre in partes_ruta:
         if actual == "root":
-            query = f"name = '{nombre}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            query = f"name = '{nombre}' and trashed = false"
         else:
-            query = (
-                f"name = '{nombre}' and '{actual}' in parents "
-                "and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-            )
+            query = f"name = '{nombre}' and '{actual}' in parents and trashed = false"
         resultado = servicio.files().list(
-            q=query, fields="files(id, name)", supportsAllDrives=True, includeItemsFromAllDrives=True
+            q=query, fields="files(id, name, mimeType)", supportsAllDrives=True, includeItemsFromAllDrives=True
         ).execute()
-        archivos = resultado.get("files", [])
-        if not archivos:
-            raise FileNotFoundError(f"No se encontró la carpeta '{nombre}' dentro de la ruta {partes_ruta}")
-        actual = archivos[0]["id"]
+        candidatos = [
+            f for f in resultado.get("files", [])
+            if f.get("mimeType") in ("application/vnd.google-apps.folder", "application/vnd.google-apps.shortcut")
+        ]
+        if not candidatos:
+            q_hijos = f"'{actual}' in parents and trashed = false" if actual != "root" else "trashed = false"
+            hijos = servicio.files().list(
+                q=q_hijos, fields="files(name, mimeType)", supportsAllDrives=True,
+                includeItemsFromAllDrives=True, pageSize=50,
+            ).execute().get("files", [])
+            disponibles = [f"{h['name']} ({h['mimeType'].rsplit('.', 1)[-1]})" for h in hijos]
+            raise FileNotFoundError(
+                f"No se encontró '{nombre}' dentro de la ruta {partes_ruta}. "
+                f"Lo que sí hay ahí: {disponibles}"
+            )
+        actual = resolver_destino_si_es_atajo(servicio, candidatos[0])
     return actual
 
 def listar_archivos_en_carpeta(servicio, carpeta_id):
