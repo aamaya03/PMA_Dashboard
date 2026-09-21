@@ -136,7 +136,7 @@
       </div>
     </div>
     <div class="mapa-grid" id="mapa-grid"><div id="mapa-svg-container"></div></div>
-    <div class="mapa-nota">Totales para el período seleccionado arriba (<span id="mapa-periodo-actual"></span>). Categorías: <span id="mapa-rangos"></span>. El municipio con borde rojo es el seleccionado arriba; también puedes hacer clic en una forma para seleccionarlo.</div>
+    <div class="mapa-nota">Totales para el período seleccionado (<span id="mapa-periodo-actual"></span>). Categorías: <span id="mapa-rangos"></span>.</div>
   </div>
 
   <footer>
@@ -521,7 +521,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
     Plotly.newPlot("chart", traces, {
       ...layoutBase, yaxis: { title: "°C" },
       shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_TMAX, y1: UMBRAL_TMAX, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
-      title: { text: `Temperatura diaria (línea punteada: umbral de ejemplo ${UMBRAL_TMAX}°C)`, font: { size: 13 } },
+      title: { text: `Temperatura diaria (línea punteada: umbral ${UMBRAL_TMAX}°C)`, font: { size: 13 } },
     }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Humedad relativa") {
     const serie = vars.relhum.slice(-diasPeriodo);
@@ -529,7 +529,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
     Plotly.newPlot("chart", traces, {
       ...layoutBase, yaxis: { title: "%" },
       shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_HR, y1: UMBRAL_HR, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
-      title: { text: `Humedad relativa diaria (línea punteada: umbral de ejemplo ${UMBRAL_HR}%)`, font: { size: 13 } },
+      title: { text: `Humedad relativa diaria (línea punteada: umbral ${UMBRAL_HR}%)`, font: { size: 13 } },
     }, { displayModeBar: false, responsive: true });
   }
 }
