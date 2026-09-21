@@ -515,7 +515,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      contenedor.append(tarjeta(`Temperaturas por encima de ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, "", "--color-temp"));
+      contenedor.append(tarjeta(`Días con temperaturas por encima de ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, "", "--color-temp"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
@@ -524,7 +524,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
       contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        contenedor.append(tarjeta(`Humedad por encima de ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, "", "--color-relhum"));
+        contenedor.append(tarjeta(`Días con humedad por encima de ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, "", "--color-relhum"));
       }
     }
   }
@@ -793,6 +793,25 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
 }
 
 // --- Pestañas: alternar entre la vista de fuentes secundarias y la de campo ---
+function actualizarOpcionesPeriodo(vista) {
+  const soloSecundaria = ["Hoy", "Ayer"];
+  if (vista === "campo") {
+    soloSecundaria.forEach((v) => {
+      const opt = Array.from($periodo.options).find((o) => o.value === v);
+      if (opt) opt.remove();
+    });
+    if (!Array.from($periodo.options).some((o) => o.value === $periodo.value)) {
+      $periodo.value = "Última semana";
+    }
+  } else {
+    Object.keys(PERIODOS).forEach((nombre, i) => {
+      if (!Array.from($periodo.options).some((o) => o.value === nombre)) {
+        $periodo.add(new Option(nombre, nombre), $periodo.options[i] || null);
+      }
+    });
+  }
+}
+
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("activa"));
@@ -800,6 +819,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     const vista = btn.dataset.vista;
     document.getElementById("vista-secundaria").style.display = vista === "secundaria" ? "" : "none";
     document.getElementById("vista-campo").style.display = vista === "campo" ? "" : "none";
+    actualizarOpcionesPeriodo(vista);
     panel(); // redibuja: evita que un gráfico quede mal dimensionado por haber estado oculto
   });
 });
