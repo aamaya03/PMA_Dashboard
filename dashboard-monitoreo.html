@@ -42,18 +42,26 @@
   header h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(1.6rem, 3vw, 2.1rem); margin: 0 0 6px; }
   header p { color: var(--color-ink-soft); margin: 0; max-width: 60ch; font-size: 0.95rem; }
 
-  .header-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 28px; }
-  .header-row header { flex: 1; min-width: 280px; }
+  .header-row { margin-bottom: 20px; }
+  .header-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px; }
+
+  .fuente-badge {
+    display: flex; align-items: center; gap: 8px; padding: 10px 16px; flex-shrink: 0;
+    background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 999px;
+    font-size: 0.9rem; font-weight: 600; color: var(--color-ink);
+  }
+  .fuente-badge .chulito { color: #2E7D4F; font-weight: 700; font-size: 1.1rem; }
 
   .enso-panel {
-    display: inline-flex; gap: 10px; align-items: center; flex-shrink: 0;
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
     background: var(--color-panel); border: 1px solid var(--color-line); border-radius: var(--radius);
-    padding: 8px 14px 8px 8px;
+    padding: 16px 22px; margin-bottom: 24px;
   }
   .enso-panel svg { display: block; }
-  .enso-texto { font-size: 0.78rem; line-height: 1.3; }
-  .enso-texto .fase { font-family: var(--font-display); font-weight: 600; font-size: 0.95rem; color: var(--color-ink); }
-  .enso-texto .detalle { color: var(--color-ink-soft); }
+  .enso-texto { font-size: 0.85rem; line-height: 1.4; }
+  .enso-texto .fase { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; color: var(--color-ink); }
+  .enso-texto .valor { font-size: 0.88rem; color: var(--color-ink-soft); margin-top: 2px; }
+  .enso-texto .detalle { color: var(--color-ink-soft); margin-top: 2px; }
   .enso-texto .detalle a { color: var(--color-ink-soft); }
 
   .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; padding: 16px;
@@ -61,31 +69,40 @@
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field label { font-size: 0.78rem; color: var(--color-ink-soft); }
   select { font-family: var(--font-body); font-size: 0.92rem; padding: 8px 10px;
-    border: 1px solid var(--color-line); border-radius: 4px; background: var(--color-bg); color: var(--color-ink); min-width: 180px; }
-  .fuente-chip { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--color-ink-soft); }
-  .fuente-chip .chulito { color: #2E7D4F; font-weight: 700; }
+    border: 1px solid var(--color-line); border-radius: 4px; background: var(--color-bg); color: var(--color-ink); min-width: 200px; }
 
   .cards { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
-  .card { flex: 1; min-width: 200px; background: var(--color-panel); border: 1px solid var(--color-line);
+  .card { flex: 1; min-width: 200px; background: color-mix(in srgb, var(--card-tinte, var(--color-rain)) 6%, var(--color-panel)); border: 1px solid var(--color-line);
     border-left: 3px solid var(--card-accent, var(--color-rain)); border-radius: var(--radius); padding: 14px 16px; }
-  .card .label { font-size: 0.8rem; color: var(--color-ink-soft); margin-bottom: 4px; }
+  .card .label { font-size: 0.8rem; color: var(--color-ink-soft); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .card .card-icono { font-size: 1.1rem; line-height: 1; }
   .card .value { font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; }
   .card .detail { font-size: 0.78rem; color: var(--color-ink-soft); margin-top: 4px; }
 
   .chart-panel { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 16px; overflow-x: auto; }
+  .temp-toggle { display: flex; gap: 6px; margin-bottom: 10px; }
+  .temp-toggle-btn {
+    font-family: var(--font-body); font-size: 0.8rem; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--color-line); background: var(--color-bg); color: var(--color-ink-soft);
+  }
+  .temp-toggle-btn.activa { background: var(--color-temp); border-color: var(--color-temp); color: white; font-weight: 600; }
   #chart { min-width: 320px; }
 
   .mapa-panel { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 16px; margin-top: 20px; }
-  .mapa-header { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin-bottom: 14px; }
-  .mapa-header h2 { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; margin: 0; flex: 1; min-width: 180px; }
+  .mapa-header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 6px; }
+  .mapa-header-texto { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; flex: 1; min-width: 200px; }
+  .mapa-header h2 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; margin: 0; }
+  .mapa-localizador { flex-shrink: 0; opacity: 0.9; }
   .mapa-zoom-btn {
     font-family: var(--font-body); font-size: 0.78rem; padding: 6px 12px; border-radius: 999px;
     border: 1px solid var(--color-line); background: var(--color-bg); color: var(--color-ink-soft); cursor: pointer;
   }
   .mapa-zoom-btn:hover { border-color: var(--color-rain); color: var(--color-ink); }
-  .mapa-leyenda { display: flex; gap: 14px; font-size: 0.78rem; color: var(--color-ink-soft); flex-wrap: wrap; }
-  .mapa-leyenda span { display: inline-flex; align-items: center; gap: 5px; }
-  .mapa-leyenda i { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+  .mapa-leyenda { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .leyenda-fila { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--color-bg); border-radius: 6px; }
+  .leyenda-fila i { width: 18px; height: 18px; border-radius: 4px; display: inline-block; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.08); }
+  .leyenda-nombre { font-weight: 700; font-size: 0.88rem; }
+  .leyenda-rango { font-size: 0.78rem; color: var(--color-ink-soft); margin-left: auto; }
   .mapa-grid { display: flex; justify-content: center; }
   #mapa-svg-container { max-width: 520px; width: 100%; }
   #mapa-svg-container svg { width: 100%; height: auto; }
@@ -114,16 +131,21 @@
 <div class="wrap">
   <div class="header-row">
     <header>
-      <h1>Monitoreo Climático</h1>
-      <p id="header-descripcion">Lluvia, temperatura y humedad relativa de los últimos días, calculadas a partir de datos satelitales (MSWX / MSWEP) para cada municipio.</p>
-    </header>
-
-    <div class="enso-panel">
-      <div id="enso-gauge"></div>
-      <div class="enso-texto">
-        <div class="fase" id="enso-fase-texto"></div>
-        <div class="detalle" id="enso-detalle"></div>
+      <div class="header-top">
+        <div>
+          <h1>Monitoreo Climático</h1>
+          <p id="header-descripcion">Lluvia, temperatura y humedad relativa de los últimos días, calculadas a partir de datos satelitales (MSWX / MSWEP) para cada municipio.</p>
+        </div>
+        <div class="fuente-badge"><span class="chulito">✓</span><span id="fuente-fecha">Actualizado —</span></div>
       </div>
+    </header>
+  </div>
+
+  <div class="enso-panel">
+    <div id="enso-gauge"></div>
+    <div class="enso-texto">
+      <div class="fase" id="enso-fase-texto"></div>
+      <div class="detalle" id="enso-detalle"></div>
     </div>
   </div>
 
@@ -131,33 +153,36 @@
     <div class="field"><label for="sel-municipio">Municipio</label><select id="sel-municipio"></select></div>
     <div class="field"><label for="sel-periodo">Período</label><select id="sel-periodo"></select></div>
     <div class="field"><label for="sel-variable">Variable</label><select id="sel-variable"></select></div>
-    <div class="fuente-chip"><span class="chulito">✓</span><span id="fuente-fecha">Actualizado —</span></div>
   </div>
 
   <div class="tabs">
-    <button type="button" class="tab-btn activa" data-vista="secundaria">Fuentes secundarias</button>
-    <button type="button" class="tab-btn" data-vista="campo">Registro de campo</button>
+    <button type="button" class="tab-btn activa" data-vista="secundaria">Monitoreo satelital</button>
+    <button type="button" class="tab-btn" data-vista="campo">Monitoreo de campo</button>
   </div>
 
   <div id="vista-secundaria">
     <div class="cards" id="cards"></div>
 
     <div class="chart-panel">
+      <div class="temp-toggle" id="temp-toggle" style="display:none;">
+        <button type="button" data-modo="completo" class="temp-toggle-btn activa">Promedio + rango</button>
+        <button type="button" data-modo="min" class="temp-toggle-btn">Solo mínimas</button>
+        <button type="button" data-modo="max" class="temp-toggle-btn">Solo máximas</button>
+      </div>
       <div id="chart"></div>
     </div>
 
     <div class="mapa-panel">
       <div class="mapa-header">
-        <h2 id="mapa-titulo">Lluvia por municipio</h2>
-        <button type="button" id="btn-mapa-zoom" class="mapa-zoom-btn"></button>
-        <div class="mapa-leyenda">
-          <span><i style="background:#DCE8F2"></i>Normal</span>
-        <span><i style="background:#5B9BD5"></i>Moderada</span>
-        <span><i style="background:#1F4E79"></i>Fuerte</span>
+        <div class="mapa-header-texto">
+          <h2 id="mapa-titulo">Lluvia por municipio</h2>
+          <button type="button" id="btn-mapa-zoom" class="mapa-zoom-btn"></button>
+        </div>
+        <div id="mapa-localizador" class="mapa-localizador" title="Ubicación del departamento en Colombia (simplificado)"></div>
       </div>
-    </div>
-    <div class="mapa-grid" id="mapa-grid"><div id="mapa-svg-container"></div></div>
-    <div class="mapa-nota">Totales para el período seleccionado (<span id="mapa-periodo-actual"></span>). Categorías: <span id="mapa-rangos"></span>.</div>
+      <div class="mapa-leyenda" id="mapa-leyenda"></div>
+      <div class="mapa-grid" id="mapa-grid"><div id="mapa-svg-container"></div></div>
+      <div class="mapa-nota">Totales para el período seleccionado (<span id="mapa-periodo-actual"></span>).</div>
     </div>
   </div>
 
@@ -291,28 +316,24 @@ const MUNICIPIO_DEPARTAMENTO = {
 function slug(s) { return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9]/g, "-").toLowerCase(); }
 
 /* ------------------------------------------------------------------------
-   GRILLA ESPACIAL POR MUNICIPIO (demo)
+   GRILLA ESPACIAL POR MUNICIPIO Y VARIABLE (demo)
    Hoy el pipeline extrae MSWX/MSWEP en un solo punto (centroide) por
-   municipio — por eso el mapa mostraba un color plano por forma. Para que
-   el mapa muestre variación espacial de verdad, la extracción real debe
-   recortar el RASTER completo dentro del polígono de cada municipio (p. ej.
-   con rioxarray/regionmask/rasterstats sobre el shapefile), en vez de un
-   solo pixel/centroide, y exportar esa grilla de valores en el data.json.
-   Mientras tanto, se simula aquí una grilla 7x7 por municipio, derivada
-   del mismo total diario pero con un gradiente espacial de ejemplo.
+   municipio para las series de líneas, pero además recorta el RASTER
+   completo dentro del polígono para lluvia, temperatura y humedad — eso es
+   lo que llega en data.json como grid / grid_tavg / grid_relhum. Mientras
+   no exista ese archivo real, se simula aquí una grilla 7x7 de ejemplo.
    ------------------------------------------------------------------------ */
+const GRID_FIELD_POR_VARIABLE = { precip: "grid", tavg: "grid_tavg", relhum: "grid_relhum" };
 const gridCache = {};
-function obtenerGrilla(nombreMunicipio) {
-  if (gridCache[nombreMunicipio]) return gridCache[nombreMunicipio];
+function obtenerGrilla(nombreMunicipio, varKey) {
+  const claveCache = nombreMunicipio + "|" + varKey;
+  if (gridCache[claveCache]) return gridCache[claveCache];
 
-  // Si data.json ya trae la grilla real (recorte raster hecho en el pipeline),
-  // se usa tal cual — la generación sintética de abajo es solo para el modo
-  // de ejemplo, cuando todavía no hay data.json.
-  const gridReal = datos.municipios[nombreMunicipio].grid;
+  const campo = GRID_FIELD_POR_VARIABLE[varKey];
+  const gridReal = datos.municipios[nombreMunicipio][campo];
   if (gridReal && gridReal.length) {
-    const n = Math.round(Math.sqrt(gridReal.length));
-    gridCache[nombreMunicipio] = { celdas: gridReal, n };
-    return gridCache[nombreMunicipio];
+    gridCache[claveCache] = { celdas: gridReal };
+    return gridCache[claveCache];
   }
 
   const depto = MUNICIPIO_DEPARTAMENTO[nombreMunicipio];
@@ -321,29 +342,38 @@ function obtenerGrilla(nombreMunicipio) {
   const vars = datos.municipios[nombreMunicipio];
   const n = 7;
   const [minlon, maxlon, minlat, maxlat] = bboxMuni;
-  const rand = pseudoRandom(MUNICIPIOS.indexOf(nombreMunicipio) * 977 + 13);
+  const rand = pseudoRandom(MUNICIPIOS.indexOf(nombreMunicipio) * 977 + 13 + (varKey === "tavg" ? 1000 : varKey === "relhum" ? 2000 : 0));
+  // La lluvia varía bastante de un lado a otro del municipio (ejemplo);
+  // temperatura y humedad varían mucho menos en un área tan chica.
+  const [gMin, gMax] = varKey === "precip" ? [0.5, 1.4] : [0.95, 1.05];
+  const ruidoAmp = varKey === "precip" ? 0.3 : 0.03;
   const celdas = [];
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
       const lon = minlon + ((maxlon - minlon) * i) / (n - 1);
       const lat = minlat + ((maxlat - minlat) * j) / (n - 1);
-      const gradiente = 0.5 + 0.9 * (i / (n - 1)); // varía de oeste (más seco) a este (más lluvioso), solo de ejemplo
-      const ruido = 0.75 + rand() * 0.5;
+      const gradiente = gMin + (gMax - gMin) * (i / (n - 1));
+      const ruido = 1 + (rand() - 0.5) * ruidoAmp;
       const factor = gradiente * ruido;
-      const valores = vars.precip.map((p) => +(p.value * factor).toFixed(1));
+      const valores = vars[varKey].map((p) => +(p.value * factor).toFixed(1));
       celdas.push({ lon, lat, valores });
     }
   }
-  gridCache[nombreMunicipio] = { bbox: bboxMuni, celdas, n };
-  return gridCache[nombreMunicipio];
+  gridCache[claveCache] = { celdas };
+  return gridCache[claveCache];
 }
 
-function totalCeldaPeriodo(valores, vars, diasPeriodo, fechaObjetivo) {
+function agregadoCeldaPeriodo(valores, vars, diasPeriodo, fechaObjetivo, varKey) {
+  let ventana;
   if (fechaObjetivo) {
-    const idx = vars.precip.findIndex((p) => p.date === fechaObjetivo);
-    return idx >= 0 ? valores[idx] : 0;
+    const idx = vars[varKey].findIndex((p) => p.date === fechaObjetivo);
+    ventana = idx >= 0 ? [valores[idx]] : [];
+  } else {
+    ventana = valores.slice(-diasPeriodo);
   }
-  return valores.slice(-diasPeriodo).reduce((s, v) => s + v, 0);
+  if (!ventana.length) return 0;
+  if (varKey === "precip") return ventana.reduce((s, v) => s + v, 0); // acumulado
+  return ventana.reduce((s, v) => s + v, 0) / ventana.length; // promedio
 }
 
 /* ======================================================================
@@ -351,8 +381,9 @@ function totalCeldaPeriodo(valores, vars, diasPeriodo, fechaObjetivo) {
    ====================================================================== */
 
 const UMBRAL_LLUVIA = 1.0; // mm — a partir de aquí un día cuenta como "con lluvia"
-const PERIODOS = { "Hoy": 0, "Ayer": 1, "Última semana": 7, "Últimas 2 semanas": 14, "Último mes": 30 };
+const PERIODOS = { "Última fecha": 1, "Última semana": 7, "Últimas 2 semanas": 14, "Último mes": 30 };
 const VARIABLES_VISTA = ["Lluvia", "Temperatura", "Humedad relativa"];
+const ETIQUETA_CON_UNIDAD = { "Lluvia": "Lluvia (mm)", "Temperatura": "Temperatura (°C)", "Humedad relativa": "Humedad relativa (%)" };
 const MESES_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 
 /* ------------------------------------------------------------------------
@@ -361,8 +392,17 @@ const MESES_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","n
    ------------------------------------------------------------------------ */
 const UMBRAL_TMAX = 30;              // °C — días de calor
 const UMBRAL_HR = 80;                // % — días de humedad alta
-const UMBRAL_LLUVIA_MODERADA = 15;   // mm — categoría "Moderada" (IDEAM: lluvia moderada 15-40 mm)
-const UMBRAL_LLUVIA_FUERTE = 40;     // mm — categoría "Fuerte" (IDEAM: lluvia fuerte 40-70 mm)
+// Umbrales de lluvia ACUMULADA, uno por cada duración de período — un
+// acumulado de "Fuerte" en un solo día es mucho menor que uno de "Fuerte"
+// en un mes, así que cada período tiene su propia escala. Valores de
+// ejemplo (referencia diaria de IDEAM, escalados para los demás); ajústalos
+// cuando tengas los umbrales reales de cada zona.
+const UMBRALES_LLUVIA_POR_DIAS = {
+  1:  { seco: 1,  moderada: 15,  fuerte: 40 },   // Ayer (1 día)
+  7:  { seco: 5,  moderada: 50,  fuerte: 100 },  // Última semana
+  14: { seco: 10, moderada: 90,  fuerte: 180 },  // Últimas 2 semanas
+  30: { seco: 15, moderada: 150, fuerte: 300 },  // Último mes
+};
 
 function fechaEs(iso) {
   const [y, m, d] = iso.split("-").map(Number);
@@ -439,7 +479,7 @@ const $fuenteFecha = document.getElementById("fuente-fecha");
 
 MUNICIPIOS.forEach((m) => $municipio.add(new Option(m, m)));
 Object.keys(PERIODOS).forEach((p) => $periodo.add(new Option(p, p)));
-VARIABLES_VISTA.forEach((v) => $variable.add(new Option(v, v)));
+VARIABLES_VISTA.forEach((v) => $variable.add(new Option(ETIQUETA_CON_UNIDAD[v], v)));
 $periodo.value = "Última semana";
 $variable.value = "Lluvia";
 
@@ -463,34 +503,38 @@ function enso_arco(cx, cy, r, angIni, angFin) {
 }
 function pintarEnso() {
   const e = datos.enso;
-  const cx = 62, cy = 58, r = 46;
+  const cx = 92, cy = 88, r = 70;
   const segmentos = [
     { desde: ENSO_MIN, hasta: -0.5, color: "#1D5A8C" }, // La Niña
-    { desde: -0.5, hasta: 0.5, color: "#B9BEA8" },      // Normal
+    { desde: -0.5, hasta: 0.5, color: "#3F8F5F" },      // Normal
     { desde: 0.5, hasta: ENSO_MAX, color: "#D97F2B" },  // El Niño
   ];
   const arcos = segmentos
-    .map((s) => `<path d="${enso_arco(cx, cy, r, enso_angulo(s.desde), enso_angulo(s.hasta))}" stroke="${s.color}" stroke-width="11" fill="none"></path>`)
+    .map((s) => `<path d="${enso_arco(cx, cy, r, enso_angulo(s.desde), enso_angulo(s.hasta))}" stroke="${s.color}" stroke-width="16" fill="none"></path>`)
     .join("");
   const angAguja = enso_angulo(e.valor);
-  const [xa, ya] = enso_polar(cx, cy, r - 12, angAguja);
+  const [xa, ya] = enso_polar(cx, cy, r - 18, angAguja);
   const svg = `
-    <svg viewBox="0 0 124 64" width="124" height="64" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 184 98" width="184" height="98" xmlns="http://www.w3.org/2000/svg">
       ${arcos}
-      <line x1="${cx}" y1="${cy}" x2="${xa.toFixed(1)}" y2="${ya.toFixed(1)}" stroke="var(--color-ink)" stroke-width="2.5" stroke-linecap="round"></line>
-      <circle cx="${cx}" cy="${cy}" r="4" fill="var(--color-ink)"></circle>
+      <line x1="${cx}" y1="${cy}" x2="${xa.toFixed(1)}" y2="${ya.toFixed(1)}" stroke="var(--color-ink)" stroke-width="3.5" stroke-linecap="round"></line>
+      <circle cx="${cx}" cy="${cy}" r="6" fill="var(--color-ink)"></circle>
+      <text x="${cx}" y="${cy - 24}" text-anchor="middle" font-family="Zilla Slab, serif" font-weight="700" font-size="20" fill="var(--color-ink)">${e.valor.toFixed(1)}</text>
     </svg>`;
   document.getElementById("enso-gauge").innerHTML = svg;
   const fase = e.valor >= 0.5 ? "El Niño" : e.valor <= -0.5 ? "La Niña" : "Normal";
   document.getElementById("enso-fase-texto").textContent = `Fase ENSO: ${fase}`;
-  document.getElementById("enso-detalle").innerHTML = `${e.categoria} · ${e.actualizado} · <a href="${e.fuente_url}" target="_blank" rel="noopener">NOAA CPC</a>`;
+  document.getElementById("enso-detalle").innerHTML =
+    `<div class="valor">Índice de referencia: ${e.valor.toFixed(1)} — ${e.categoria}</div>` +
+    `<div class="detalle">Actualizado ${e.actualizado} · <a href="${e.fuente_url}" target="_blank" rel="noopener">NOAA CPC</a></div>`;
 }
 
-function tarjeta(label, value, detail, accentVar) {
+function tarjeta(label, value, detail, accentVar, icono = "") {
   const div = document.createElement("div");
   div.className = "card";
   div.style.setProperty("--card-accent", `var(${accentVar})`);
-  div.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div><div class="detail">${detail}</div>`;
+  div.style.setProperty("--card-tinte", `var(${accentVar})`);
+  div.innerHTML = `<div class="label">${icono ? `<span class="card-icono">${icono}</span>` : ""}${label}</div><div class="value">${value}</div><div class="detail">${detail}</div>`;
   return div;
 }
 function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo, contenedor = $cards) {
@@ -499,32 +543,33 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
 
   if (variableElegida === "Lluvia") {
     if (ind.precip_no_disponible) {
-      contenedor.append(tarjeta(`Lluvia — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-rain"));
+      contenedor.append(tarjeta(`Lluvia — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-rain", "🌧️"));
     } else if (ind.precip_dias_periodo !== undefined) {
       const diasSinLluvia = ind.precip_dias_periodo - ind.precip_dias_con_lluvia;
-      contenedor.append(tarjeta(`Días con lluvia — ${etiqueta}`, `${ind.precip_dias_con_lluvia} de ${ind.precip_dias_periodo} días`, `${diasSinLluvia} día(s) sin lluvia`, "--color-rain"));
-      contenedor.append(tarjeta(`Lluvia total — ${etiqueta}`, `${ind.precip_total.toFixed(1)} mm`, "", "--color-rain"));
+      contenedor.append(tarjeta(`Días con lluvia — ${etiqueta}`, `${ind.precip_dias_con_lluvia} días`, "", "--color-rain", "🌧️"));
+      contenedor.append(tarjeta(`Días secos — ${etiqueta}`, `${diasSinLluvia} días`, "", "--color-rain", "☀️"));
+      contenedor.append(tarjeta(`Lluvia total — ${etiqueta}`, `${ind.precip_total.toFixed(1)} mm`, "", "--color-rain", "🌧️"));
     }
   } else if (variableElegida === "Temperatura") {
     if (ind.temp_no_disponible) {
-      contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-temp"));
+      contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-temp", "🌡️"));
     } else if (ind.temp_promedio !== undefined) {
       let detalle = "";
       if (ind.temp_max) detalle += `Máx: ${ind.temp_max.value.toFixed(1)}°C (${fechaEs(ind.temp_max.date)})  `;
       if (ind.temp_min) detalle += `Mín: ${ind.temp_min.value.toFixed(1)}°C (${fechaEs(ind.temp_min.date)})`;
-      contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp"));
+      contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp", "🌡️"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      contenedor.append(tarjeta(`Días con temperaturas por encima de ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, "", "--color-temp"));
+      contenedor.append(tarjeta(`Temperaturas por encima de ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, "", "--color-temp", "🔥"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
-      contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-relhum"));
+      contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-relhum", "💧"));
     } else if (ind.relhum_promedio !== undefined) {
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
-      contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum"));
+      contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum", "💧"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        contenedor.append(tarjeta(`Días con humedad por encima de ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, "", "--color-relhum"));
+        contenedor.append(tarjeta(`Humedad por encima de ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, "", "--color-relhum", "💦"));
       }
     }
   }
@@ -532,36 +577,46 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
 
 function estiloEjeFecha() { return { tickformat: "%d-%b", tickfont: { size: 11 } }; }
 
+let modoTemperatura = "completo"; // "completo" | "min" | "max" — controla qué líneas se ven en el gráfico de temperatura
+
 function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida, targetId = "chart") {
   const layoutBase = {
-    margin: { t: 36, r: 20, b: 40, l: 50 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+    margin: { t: 46, r: 20, b: 40, l: 60 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
     font: { family: "Work Sans, sans-serif", color: getComputedStyle(document.body).getPropertyValue("--color-ink") },
-    xaxis: estiloEjeFecha(), showlegend: true, legend: { orientation: "h", y: -0.2 }, height: 380,
+    xaxis: estiloEjeFecha(), showlegend: true, legend: { orientation: "h", y: -0.22 }, height: 380,
   };
 
   if (variableElegida === "Lluvia") {
     const serie = vars.precip.slice(-diasPeriodo);
     const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), type: "bar", name: "Lluvia diaria", marker: { color: "#1D5A8C" }, hovertemplate: "%{x}<br>%{y:.1f} mm<extra></extra>" }];
-    Plotly.newPlot(targetId, traces, { ...layoutBase, yaxis: { title: "mm/día" }, title: { text: "Lluvia diaria", font: { size: 13 } } }, { displayModeBar: false, responsive: true });
+    Plotly.newPlot(targetId, traces, { ...layoutBase, yaxis: { title: { text: "mm/día", font: { size: 15 } } }, title: { text: "Lluvia diaria", font: { size: 18 } } }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Temperatura") {
     const tavg = vars.tavg.slice(-diasPeriodo), tmin = vars.tmin.slice(-diasPeriodo), tmax = vars.tmax.slice(-diasPeriodo);
-    const traces = [
-      { x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines", line: { width: 0 }, showlegend: false, hoverinfo: "skip" },
-      { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines", fill: "tonexty", fillcolor: "rgba(217,127,43,0.15)", line: { width: 0 }, name: "Rango mín–máx del día", hoverinfo: "skip" },
-      { x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5 }, marker: { size: 5 }, name: "Temperatura promedio", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
-    ];
+    let traces, tituloTxt;
+    if (modoTemperatura === "min") {
+      traces = [{ x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines+markers", line: { color: "#2A6E85", width: 2.5 }, marker: { size: 6 }, name: "Temperatura mínima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" }];
+      tituloTxt = "Temperatura mínima diaria";
+    } else if (modoTemperatura === "max") {
+      traces = [{ x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines+markers", line: { color: "#B23A3A", width: 2.5 }, marker: { size: 6 }, name: "Temperatura máxima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" }];
+      tituloTxt = "Temperatura máxima diaria";
+    } else {
+      traces = [
+        { x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines", line: { width: 0 }, showlegend: false, hoverinfo: "skip" },
+        { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines", fill: "tonexty", fillcolor: "rgba(217,127,43,0.15)", line: { width: 0 }, name: "Rango mín–máx del día", hoverinfo: "skip" },
+        { x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5 }, marker: { size: 5 }, name: "Temperatura promedio", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
+      ];
+      tituloTxt = "Temperatura diaria";
+    }
     Plotly.newPlot(targetId, traces, {
-      ...layoutBase, yaxis: { title: "°C" },
-      shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_TMAX, y1: UMBRAL_TMAX, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
-      title: { text: `Temperatura diaria (línea punteada: umbral ${UMBRAL_TMAX}°C)`, font: { size: 13 } },
+      ...layoutBase, yaxis: { title: { text: "°C", font: { size: 15 } } },
+      title: { text: tituloTxt, font: { size: 18 } },
     }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Humedad relativa") {
     const serie = vars.relhum.slice(-diasPeriodo);
     const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), mode: "lines+markers", line: { color: "#4FA8C9", width: 2.5 }, marker: { size: 5 }, name: "Humedad relativa", hovertemplate: "%{x}<br>%{y:.0f}%<extra></extra>" }];
     Plotly.newPlot(targetId, traces, {
-      ...layoutBase, yaxis: { title: "%" },
-      shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_HR, y1: UMBRAL_HR, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
-      title: { text: `Humedad relativa diaria (línea punteada: umbral ${UMBRAL_HR}%)`, font: { size: 13 } },
+      ...layoutBase, yaxis: { title: { text: "%", font: { size: 15 } } },
+      title: { text: "Humedad relativa diaria", font: { size: 18 } },
     }, { displayModeBar: false, responsive: true });
   }
 }
@@ -623,17 +678,57 @@ function proyector(bbox, w, h, pad) {
   };
 }
 
-function categoriaLluvia(total) {
-  if (total >= UMBRAL_LLUVIA_FUERTE) return { nombre: "Fuerte", color: "#1F4E79" };
-  if (total >= UMBRAL_LLUVIA_MODERADA) return { nombre: "Moderada", color: "#5B9BD5" };
-  return { nombre: "Normal", color: "#DCE8F2" };
+/* ------------------------------------------------------------------------
+   UMBRALES DEL MAPA POR VARIABLE — valores de ejemplo, fijos.
+   La idea a futuro: generarlos UNA sola vez con un script aparte que analice
+   las series históricas (percentiles P25/P75/P90 de los acumulados/promedios
+   diarios, semanales, quincenales y mensuales de cada municipio) y los deje
+   escritos aquí como constantes — no se recalculan en el navegador cada vez.
+   ------------------------------------------------------------------------ */
+const UMBRALES_TEMP_POR_DIAS = {
+  1:  { bajo: 25,   alto: 30,   muyAlto: 32 },
+  7:  { bajo: 26,   alto: 29,   muyAlto: 31 },
+  14: { bajo: 26,   alto: 29,   muyAlto: 30.5 },
+  30: { bajo: 26.5, alto: 28.5, muyAlto: 30 },
+};
+const UMBRALES_HR_POR_DIAS = {
+  1:  { bajo: 55, alto: 80, muyAlto: 90 },
+  7:  { bajo: 60, alto: 78, muyAlto: 87 },
+  14: { bajo: 62, alto: 77, muyAlto: 85 },
+  30: { bajo: 63, alto: 76, muyAlto: 83 },
+};
+const CATEGORIAS_MAPA = {
+  precip: { etiquetas: ["Seco", "Normal", "Moderada", "Fuerte"], colores: ["#E4D9BE", "#DCE8F2", "#5B9BD5", "#1F4E79"] },
+  tavg:   { etiquetas: ["Fresco", "Normal", "Cálido", "Muy cálido"], colores: ["#E7F0E1", "#FBD9A0", "#E8935B", "#B23A3A"] },
+  relhum: { etiquetas: ["Baja", "Normal", "Alta", "Muy alta"], colores: ["#F3F0E6", "#DCE8F2", "#7FBFD9", "#1F4E79"] },
+};
+const UNIDAD_VARIABLE = { precip: "mm", tavg: "°C", relhum: "%" };
+const ETIQUETA_VARIABLE = { precip: "Lluvia", tavg: "Temperatura", relhum: "Humedad relativa" };
+const CLAVE_MAPA_VARIABLE = { "Lluvia": "precip", "Temperatura": "tavg", "Humedad relativa": "relhum" };
+
+function cortesVariable(varKey, diasPeriodo) {
+  if (varKey === "precip") { const u = UMBRALES_LLUVIA_POR_DIAS[diasPeriodo] || UMBRALES_LLUVIA_POR_DIAS[7]; return [u.seco, u.moderada, u.fuerte]; }
+  if (varKey === "tavg") { const u = UMBRALES_TEMP_POR_DIAS[diasPeriodo] || UMBRALES_TEMP_POR_DIAS[7]; return [u.bajo, u.alto, u.muyAlto]; }
+  const u = UMBRALES_HR_POR_DIAS[diasPeriodo] || UMBRALES_HR_POR_DIAS[7];
+  return [u.bajo, u.alto, u.muyAlto];
 }
+
+function categoriaVariable(valor, varKey, diasPeriodo) {
+  const cat = CATEGORIAS_MAPA[varKey];
+  const [c0, c1, c2] = cortesVariable(varKey, diasPeriodo);
+  let idx = 0;
+  if (valor >= c2) idx = 3;
+  else if (valor >= c1) idx = 2;
+  else if (valor >= c0) idx = 1;
+  return { nombre: cat.etiquetas[idx], color: cat.colores[idx] };
+}
+
 
 const $mapaGrid = document.getElementById("mapa-svg-container");
 const $mapaTitulo = document.getElementById("mapa-titulo");
 const $mapaPeriodoActual = document.getElementById("mapa-periodo-actual");
-document.getElementById("mapa-rangos").textContent =
-  `Normal < ${UMBRAL_LLUVIA_MODERADA} mm · Moderada ${UMBRAL_LLUVIA_MODERADA}-${UMBRAL_LLUVIA_FUERTE} mm · Fuerte ≥ ${UMBRAL_LLUVIA_FUERTE} mm`;
+const $mapaLeyenda = document.getElementById("mapa-leyenda");
+const $mapaLocalizador = document.getElementById("mapa-localizador");
 const $btnMapaZoom = document.getElementById("btn-mapa-zoom");
 
 let mapaZoomMunicipio = true; // por defecto, acercado al municipio seleccionado
@@ -675,12 +770,67 @@ function centroideAprox(geom, bbox, w, h, pad) {
   return [sx / ring.length, sy / ring.length];
 }
 
+function pintarLeyendaMapa(varKey, diasPeriodo) {
+  const cat = CATEGORIAS_MAPA[varKey];
+  const unidad = UNIDAD_VARIABLE[varKey];
+  const [c0, c1, c2] = cortesVariable(varKey, diasPeriodo);
+  const rangos = [`< ${c0}`, `${c0} – ${c1}`, `${c1} – ${c2}`, `≥ ${c2}`];
+  $mapaLeyenda.innerHTML = cat.etiquetas.map((et, i) => `
+    <div class="leyenda-fila">
+      <i style="background:${cat.colores[i]}"></i>
+      <span class="leyenda-nombre">${et}</span>
+      <span class="leyenda-rango">${rangos[i]} ${unidad}</span>
+    </div>`).join("");
+}
+
+/* ------------------------------------------------------------------------
+   LOCALIZADOR: silueta simplificada de Colombia (contorno aproximado, no de
+   precisión catastral — solo para dar contexto visual de dónde está el
+   departamento que se muestra) con un punto marcando su ubicación.
+   ------------------------------------------------------------------------ */
+const COLOMBIA_GEO_APROX = [
+  [-71.98, 12.46], [-72.9, 11.8], [-73.25, 11.2], [-74.23, 11.24], [-74.78, 11.02],
+  [-75.55, 10.4], [-75.68, 9.4], [-76.15, 9.3], [-76.7, 8.7], [-77.35, 8.67],
+  [-77.5, 8.0], [-77.75, 7.3], [-77.5, 6.6], [-77.9, 6.1], [-77.85, 5.4],
+  [-77.5, 4.8], [-77.55, 4.0], [-77.4, 3.4], [-77.6, 2.7], [-78.05, 2.35],
+  [-77.85, 1.7], [-77.5, 0.8], [-76.9, 0.4], [-76.3, -0.1], [-75.6, 0.15],
+  [-75.1, -0.15], [-74.6, -1.0], [-74.2, -2.0], [-73.7, -2.3], [-70.9, -4.15],
+  [-70.0, -3.8], [-69.9, -1.5], [-69.4, -0.4], [-69.9, 1.0], [-67.3, 2.2],
+  [-67.0, 2.8], [-67.4, 3.6], [-67.5, 4.5], [-67.9, 5.3], [-67.5, 5.7],
+  [-67.9, 6.3], [-68.9, 6.2], [-69.4, 6.2], [-70.1, 6.95], [-70.9, 6.9],
+  [-71.5, 6.6], [-72.0, 7.0], [-72.4, 8.0], [-72.8, 9.3], [-72.5, 10.6],
+  [-72.2, 11.4],
+];
+const COLOMBIA_BBOX_APROX = [-79.1, -66.8, -4.3, 12.6]; // minlon, maxlon, minlat, maxlat
+const CENTRO_DEPARTAMENTO = { Sucre: [-75.1, 9.1], Tolima: [-75.2, 4.0] };
+
+function pintarLocalizador(dept) {
+  const W = 92, H = 112, PAD = 4;
+  const project = proyector(COLOMBIA_BBOX_APROX, W, H, PAD);
+  let d = "";
+  COLOMBIA_GEO_APROX.forEach(([lon, lat], i) => {
+    const [x, y] = project(lon, lat);
+    d += (i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1) + " ";
+  });
+  d += "Z";
+  const [clon, clat] = CENTRO_DEPARTAMENTO[dept];
+  const [cx, cy] = project(clon, clat);
+  $mapaLocalizador.innerHTML = `
+    <svg viewBox="0 0 ${W} ${H}" width="92" height="112" xmlns="http://www.w3.org/2000/svg">
+      <path d="${d}" fill="#E7E4D8" stroke="#C7CBB9" stroke-width="1"></path>
+      <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5" fill="#B23A3A" stroke="white" stroke-width="1.5"></circle>
+    </svg>`;
+}
+
 function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
   $mapaPeriodoActual.textContent = etiqueta;
   const municipioSel = $municipio.value;
   const dept = MUNICIPIO_DEPARTAMENTO[municipioSel];
   const fc = DEPARTAMENTOS_GEO[dept];
-  $mapaTitulo.textContent = `Lluvia en ${dept}`;
+  const varKey = CLAVE_MAPA_VARIABLE[$variable.value];
+  $mapaTitulo.textContent = `${ETIQUETA_VARIABLE[varKey]} en ${dept}`;
+  pintarLeyendaMapa(varKey, diasPeriodo);
+  pintarLocalizador(dept);
 
   const W = 480, H = 420, PAD = 14;
   const bboxDept = bboxDeColeccion(fc);
@@ -704,7 +854,7 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
     const idClip = "clip-" + slug(nombreObjetivo);
     defs += `<clipPath id="${idClip}"><path d="${d}" fill-rule="evenodd"></path></clipPath>`;
 
-    const { celdas } = obtenerGrilla(nombreObjetivo);
+    const { celdas } = obtenerGrilla(nombreObjetivo, varKey);
     // Espaciado real entre píxeles (funciona igual para la grilla sintética
     // de ejemplo, evenly-spaced, que para el recorte raster real, cuya
     // resolución nativa no tiene por qué relacionarse con el tamaño del
@@ -720,8 +870,8 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
     let rects = "";
     const varsObjetivo = datos.municipios[nombreObjetivo];
     celdas.forEach((celda) => {
-      const total = totalCeldaPeriodo(celda.valores, varsObjetivo, diasPeriodo, fechaObjetivo);
-      const color = categoriaLluvia(total).color;
+      const agregado = agregadoCeldaPeriodo(celda.valores, varsObjetivo, diasPeriodo, fechaObjetivo, varKey);
+      const color = categoriaVariable(agregado, varKey, diasPeriodo).color;
       const [cx, cy] = project(celda.lon, celda.lat);
       rects += `<rect x="${(cx - cellW / 2).toFixed(1)}" y="${(cy - cellH / 2).toFixed(1)}" width="${cellW.toFixed(1)}" height="${cellH.toFixed(1)}" fill="${color}"></rect>`;
     });
@@ -799,8 +949,17 @@ const DESCRIPCION_POR_VISTA = {
   campo: "Lluvia, temperatura y humedad relativa que los propios productores registraron en campo, semana a semana, para cada municipio.",
 };
 
+document.querySelectorAll(".temp-toggle-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".temp-toggle-btn").forEach((b) => b.classList.remove("activa"));
+    btn.classList.add("activa");
+    modoTemperatura = btn.dataset.modo;
+    panel();
+  });
+});
+
 function actualizarOpcionesPeriodo(vista) {
-  const soloSecundaria = ["Hoy", "Ayer"];
+  const soloSecundaria = ["Última fecha"];
   if (vista === "campo") {
     soloSecundaria.forEach((v) => {
       const opt = Array.from($periodo.options).find((o) => o.value === v);
@@ -843,10 +1002,12 @@ function panel() {
   const variableElegida = $variable.value;
   const diasPeriodo = PERIODOS[periodoNombre];
   const vars = datos.municipios[municipio];
+
+  document.getElementById("temp-toggle").style.display = variableElegida === "Temperatura" ? "flex" : "none";
   const ultimaFecha = vars.precip.slice(-1)[0].date;
 
   let fechaObjetivo = null;
-  if (periodoNombre === "Hoy" || periodoNombre === "Ayer") {
+  if (periodoNombre === "Última fecha") {
     const f = new Date(ultimaFecha); f.setDate(f.getDate() - diasPeriodo); fechaObjetivo = f.toISOString().slice(0, 10);
   }
 
@@ -855,10 +1016,10 @@ function panel() {
   pintarMapa(etiqueta, diasPeriodo, fechaObjetivo);
 
   // El registro de campo usa el mismo período elegido arriba (última
-  // semana, 2 semanas, mes), salvo "Hoy" y "Ayer": un reporte puntual no
-  // tiene sentido mirado día a día, así que esas dos opciones no aplican
-  // aquí y se avisa en vez de mostrar datos.
-  if (periodoNombre === "Hoy" || periodoNombre === "Ayer") {
+  // semana, 2 semanas, mes), salvo "Ayer": un reporte puntual no tiene
+  // sentido mirado día a día, así que esa opción no aplica aquí y se
+  // avisa en vez de mostrar datos.
+  if (periodoNombre === "Última fecha") {
     $campoCards.innerHTML = "";
     Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
     $campoVacio.style.display = "block";
@@ -868,7 +1029,7 @@ function panel() {
     pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta);
   }
 
-  if (periodoNombre === "Hoy" || periodoNombre === "Ayer") {
+  if (periodoNombre === "Última fecha") {
     Plotly.purge("chart"); document.getElementById("chart").innerHTML = "";
   } else {
     graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida);
