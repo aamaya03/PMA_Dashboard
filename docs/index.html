@@ -162,7 +162,6 @@
   </div>
 
   <div id="vista-campo" style="display:none;">
-    <div class="campo-subtitulo-fuera">Lo que los productores registraron para <span id="campo-municipio-actual"></span>, <span id="campo-periodo-actual"></span> (no disponible para "Hoy" ni "Ayer")</div>
     <div class="cards" id="campo-cards"></div>
     <div class="chart-panel">
       <div id="campo-chart"></div>
@@ -405,6 +404,7 @@ function calcularIndicadores(vars, diasPeriodo, fechaObjetivo) {
     if (tmaxPeriodo.length) {
       ind.temp_max = extremos(tmaxPeriodo).max;
       ind.dias_tmax_sobre_umbral = tmaxPeriodo.filter((p) => p.value > UMBRAL_TMAX).length;
+      ind.dias_tmax_total = tmaxPeriodo.length;
     }
   }
   if (tmin && tmin.length) { tminPeriodo = seleccionar(tmin, diasPeriodo, fechaObjetivo); if (tminPeriodo.length) ind.temp_min = extremos(tminPeriodo).min; }
@@ -421,6 +421,7 @@ function calcularIndicadores(vars, diasPeriodo, fechaObjetivo) {
       ind.relhum_promedio = periodo.reduce((s, p) => s + p.value, 0) / periodo.length;
       const ex = extremos(periodo); ind.relhum_max = ex.max; ind.relhum_min = ex.min;
       ind.dias_hr_sobre_umbral = periodo.filter((p) => p.value > UMBRAL_HR).length;
+      ind.dias_hr_total = periodo.length;
     } else if (fechaObjetivo) ind.relhum_no_disponible = true;
   }
   return ind;
@@ -514,7 +515,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      contenedor.append(tarjeta(`Días con Tmáx > ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "", "--color-temp"));
+      contenedor.append(tarjeta(`Temperaturas por encima de ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, "", "--color-temp"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
@@ -523,7 +524,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
       contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        contenedor.append(tarjeta(`Días con HR > ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "", "--color-relhum"));
+        contenedor.append(tarjeta(`Humedad por encima de ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, "", "--color-relhum"));
       }
     }
   }
