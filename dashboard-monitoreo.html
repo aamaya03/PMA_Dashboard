@@ -359,7 +359,7 @@ const MESES_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","n
    UMBRALES DE EJEMPLO — se editan aquí en el código, no desde la interfaz.
    Cámbialos cuando tengas los valores reales para cada municipio/variable.
    ------------------------------------------------------------------------ */
-const UMBRAL_TMAX = 30;              // °C — días de calor
+const UMBRAL_TMAX = 28;              // °C — días de calor
 const UMBRAL_HR = 80;                // % — días de humedad alta
 const UMBRAL_LLUVIA_MODERADA = 15;   // mm — categoría "Moderada" (IDEAM: lluvia moderada 15-40 mm)
 const UMBRAL_LLUVIA_FUERTE = 40;     // mm — categoría "Fuerte" (IDEAM: lluvia fuerte 40-70 mm)
@@ -515,7 +515,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      contenedor.append(tarjeta(`Temperaturas por encima de ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, "", "--color-temp"));
+      contenedor.append(tarjeta(`Días con temperaturas por encima de ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, "", "--color-temp"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
@@ -524,7 +524,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
       contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        contenedor.append(tarjeta(`Humedad por encima de ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, "", "--color-relhum"));
+        contenedor.append(tarjeta(`Días con humedad por encima de ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, "", "--color-relhum"));
       }
     }
   }
