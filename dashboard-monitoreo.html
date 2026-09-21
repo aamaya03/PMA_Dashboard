@@ -755,8 +755,6 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
 const $campoCards = document.getElementById("campo-cards");
 const $campoChart = document.getElementById("campo-chart");
 const $campoVacio = document.getElementById("campo-vacio");
-const $campoMunicipioActual = document.getElementById("campo-municipio-actual");
-const $campoPeriodoActual = document.getElementById("campo-periodo-actual");
 
 // El registro de campo siempre se mira a "Última semana": los reportes de
 // productores son puntuales (no hay una grilla diaria como en el satélite),
@@ -776,8 +774,6 @@ function construirVarsCampo(municipio, fechasVentana) {
 }
 
 function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
-  $campoMunicipioActual.textContent = municipio;
-  $campoPeriodoActual.textContent = etiqueta.toLowerCase();
 
   const varsCampo = construirVarsCampo(municipio, fechasVentana);
   // diasPeriodo se pasa "de sobra" a propósito: los datos ya vienen
@@ -836,8 +832,6 @@ function panel() {
   // tiene sentido mirado día a día, así que esas dos opciones no aplican
   // aquí y se avisa en vez de mostrar datos.
   if (periodoNombre === "Hoy" || periodoNombre === "Ayer") {
-    $campoMunicipioActual.textContent = municipio;
-    $campoPeriodoActual.textContent = "un período de una semana o más";
     $campoCards.innerHTML = "";
     Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
     $campoVacio.style.display = "block";
