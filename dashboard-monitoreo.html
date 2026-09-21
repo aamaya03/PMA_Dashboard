@@ -359,7 +359,7 @@ const MESES_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","n
    UMBRALES DE EJEMPLO — se editan aquí en el código, no desde la interfaz.
    Cámbialos cuando tengas los valores reales para cada municipio/variable.
    ------------------------------------------------------------------------ */
-const UMBRAL_TMAX = 28;              // °C — días de calor
+const UMBRAL_TMAX = 30;              // °C — días de calor
 const UMBRAL_HR = 80;                // % — días de humedad alta
 const UMBRAL_LLUVIA_MODERADA = 15;   // mm — categoría "Moderada" (IDEAM: lluvia moderada 15-40 mm)
 const UMBRAL_LLUVIA_FUERTE = 40;     // mm — categoría "Fuerte" (IDEAM: lluvia fuerte 40-70 mm)
@@ -793,6 +793,25 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
 }
 
 // --- Pestañas: alternar entre la vista de fuentes secundarias y la de campo ---
+function actualizarOpcionesPeriodo(vista) {
+  const soloSecundaria = ["Hoy", "Ayer"];
+  if (vista === "campo") {
+    soloSecundaria.forEach((v) => {
+      const opt = Array.from($periodo.options).find((o) => o.value === v);
+      if (opt) opt.remove();
+    });
+    if (!Array.from($periodo.options).some((o) => o.value === $periodo.value)) {
+      $periodo.value = "Última semana";
+    }
+  } else {
+    Object.keys(PERIODOS).forEach((nombre, i) => {
+      if (!Array.from($periodo.options).some((o) => o.value === nombre)) {
+        $periodo.add(new Option(nombre, nombre), $periodo.options[i] || null);
+      }
+    });
+  }
+}
+
 document.querySelectorAll(".tab-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("activa"));
@@ -800,6 +819,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     const vista = btn.dataset.vista;
     document.getElementById("vista-secundaria").style.display = vista === "secundaria" ? "" : "none";
     document.getElementById("vista-campo").style.display = vista === "campo" ? "" : "none";
+    actualizarOpcionesPeriodo(vista);
     panel(); // redibuja: evita que un gráfico quede mal dimensionado por haber estado oculto
   });
 });
