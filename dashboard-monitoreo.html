@@ -500,6 +500,19 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
 
 function estiloEjeFecha() { return { tickformat: "%d-%b", tickfont: { size: 11 } }; }
 
+function agregarObservaciones(traces, municipio, varKey, fechasVentana) {
+  const puntos = (datos.observaciones || []).filter(
+    (o) => o.municipio === municipio && o.variable === varKey && fechasVentana.includes(o.fecha)
+  );
+  if (!puntos.length) return;
+  traces.push({
+    x: puntos.map((p) => p.fecha), y: puntos.map((p) => p.valor),
+    mode: "markers", name: "Reportado en campo",
+    marker: { size: 11, symbol: "diamond", color: "#B23A3A", line: { width: 1.5, color: "white" } },
+    hovertemplate: "%{x}<br>%{y} (reportado en campo)<extra></extra>",
+  });
+}
+
 function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida) {
   const layoutBase = {
     margin: { t: 36, r: 20, b: 40, l: 50 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
@@ -510,6 +523,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
   if (variableElegida === "Lluvia") {
     const serie = vars.precip.slice(-diasPeriodo);
     const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), type: "bar", name: "Lluvia diaria", marker: { color: "#1D5A8C" }, hovertemplate: "%{x}<br>%{y:.1f} mm<extra></extra>" }];
+    agregarObservaciones(traces, municipio, "precip", serie.map((p) => p.date));
     Plotly.newPlot("chart", traces, { ...layoutBase, yaxis: { title: "mm/día" }, title: { text: "Lluvia diaria", font: { size: 13 } } }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Temperatura") {
     const tavg = vars.tavg.slice(-diasPeriodo), tmin = vars.tmin.slice(-diasPeriodo), tmax = vars.tmax.slice(-diasPeriodo);
@@ -518,6 +532,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
       { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines", fill: "tonexty", fillcolor: "rgba(217,127,43,0.15)", line: { width: 0 }, name: "Rango mín–máx del día", hoverinfo: "skip" },
       { x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5 }, marker: { size: 5 }, name: "Temperatura promedio", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
     ];
+    agregarObservaciones(traces, municipio, "tavg", tavg.map((p) => p.date));
     Plotly.newPlot("chart", traces, {
       ...layoutBase, yaxis: { title: "°C" },
       shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_TMAX, y1: UMBRAL_TMAX, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
@@ -526,6 +541,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
   } else if (variableElegida === "Humedad relativa") {
     const serie = vars.relhum.slice(-diasPeriodo);
     const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), mode: "lines+markers", line: { color: "#4FA8C9", width: 2.5 }, marker: { size: 5 }, name: "Humedad relativa", hovertemplate: "%{x}<br>%{y:.0f}%<extra></extra>" }];
+    agregarObservaciones(traces, municipio, "relhum", serie.map((p) => p.date));
     Plotly.newPlot("chart", traces, {
       ...layoutBase, yaxis: { title: "%" },
       shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_HR, y1: UMBRAL_HR, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
