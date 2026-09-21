@@ -115,7 +115,7 @@
   <div class="header-row">
     <header>
       <h1>Monitoreo Climático</h1>
-      <p>Lluvia, temperatura y humedad relativa de los últimos días, calculadas a partir de datos satelitales (MSWX / MSWEP) para cada municipio.</p>
+      <p id="header-descripcion">Lluvia, temperatura y humedad relativa de los últimos días, calculadas a partir de datos satelitales (MSWX / MSWEP) para cada municipio.</p>
     </header>
 
     <div class="enso-panel">
@@ -793,6 +793,12 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
 }
 
 // --- Pestañas: alternar entre la vista de fuentes secundarias y la de campo ---
+const $headerDescripcion = document.getElementById("header-descripcion");
+const DESCRIPCION_POR_VISTA = {
+  secundaria: "Lluvia, temperatura y humedad relativa de los últimos días, calculadas a partir de datos satelitales (MSWX / MSWEP) para cada municipio.",
+  campo: "Lluvia, temperatura y humedad relativa que los propios productores registraron en campo, semana a semana, para cada municipio.",
+};
+
 function actualizarOpcionesPeriodo(vista) {
   const soloSecundaria = ["Hoy", "Ayer"];
   if (vista === "campo") {
@@ -819,6 +825,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     const vista = btn.dataset.vista;
     document.getElementById("vista-secundaria").style.display = vista === "secundaria" ? "" : "none";
     document.getElementById("vista-campo").style.display = vista === "campo" ? "" : "none";
+    $headerDescripcion.textContent = DESCRIPCION_POR_VISTA[vista];
     actualizarOpcionesPeriodo(vista);
     panel(); // redibuja: evita que un gráfico quede mal dimensionado por haber estado oculto
   });
