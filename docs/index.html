@@ -159,7 +159,7 @@
   </div>
 
   <div id="vista-campo" style="display:none;">
-    <div class="campo-subtitulo-fuera">Lo que los productores registraron para <span id="campo-municipio-actual"></span>, <span id="campo-periodo-actual"></span></div>
+    <div class="campo-subtitulo-fuera">Lo que los productores registraron para <span id="campo-municipio-actual"></span> — siempre <span id="campo-periodo-actual"></span> (no se puede cambiar el período aquí, ya que los reportes son puntuales)</div>
     <div class="cards" id="campo-cards"></div>
     <div class="chart-panel">
       <div id="campo-chart"></div>
@@ -489,38 +489,38 @@ function tarjeta(label, value, detail, accentVar) {
   div.innerHTML = `<div class="label">${label}</div><div class="value">${value}</div><div class="detail">${detail}</div>`;
   return div;
 }
-function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo) {
+function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo, contenedor = $cards) {
   const ind = calcularIndicadores(vars, diasPeriodo, fechaObjetivo);
-  $cards.innerHTML = "";
+  contenedor.innerHTML = "";
 
   if (variableElegida === "Lluvia") {
     if (ind.precip_no_disponible) {
-      $cards.append(tarjeta(`Lluvia — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-rain"));
+      contenedor.append(tarjeta(`Lluvia — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-rain"));
     } else if (ind.precip_dias_periodo !== undefined) {
       const diasSinLluvia = ind.precip_dias_periodo - ind.precip_dias_con_lluvia;
-      $cards.append(tarjeta(`Días con lluvia — ${etiqueta}`, `${ind.precip_dias_con_lluvia} de ${ind.precip_dias_periodo} días`, `${diasSinLluvia} día(s) sin lluvia`, "--color-rain"));
-      $cards.append(tarjeta(`Lluvia total — ${etiqueta}`, `${ind.precip_total.toFixed(1)} mm`, "", "--color-rain"));
+      contenedor.append(tarjeta(`Días con lluvia — ${etiqueta}`, `${ind.precip_dias_con_lluvia} de ${ind.precip_dias_periodo} días`, `${diasSinLluvia} día(s) sin lluvia`, "--color-rain"));
+      contenedor.append(tarjeta(`Lluvia total — ${etiqueta}`, `${ind.precip_total.toFixed(1)} mm`, "", "--color-rain"));
     }
   } else if (variableElegida === "Temperatura") {
     if (ind.temp_no_disponible) {
-      $cards.append(tarjeta(`Temperatura — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-temp"));
+      contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-temp"));
     } else if (ind.temp_promedio !== undefined) {
       let detalle = "";
       if (ind.temp_max) detalle += `Máx: ${ind.temp_max.value.toFixed(1)}°C (${fechaEs(ind.temp_max.date)})  `;
       if (ind.temp_min) detalle += `Mín: ${ind.temp_min.value.toFixed(1)}°C (${fechaEs(ind.temp_min.date)})`;
-      $cards.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp"));
+      contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      $cards.append(tarjeta(`Días con Tmáx > ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "", "--color-temp"));
+      contenedor.append(tarjeta(`Días con Tmáx > ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "", "--color-temp"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
-      $cards.append(tarjeta(`Humedad relativa — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-relhum"));
+      contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-relhum"));
     } else if (ind.relhum_promedio !== undefined) {
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
-      $cards.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum"));
+      contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        $cards.append(tarjeta(`Días con HR > ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "", "--color-relhum"));
+        contenedor.append(tarjeta(`Días con HR > ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${diasPeriodo || 1} día(s)`, "", "--color-relhum"));
       }
     }
   }
@@ -528,7 +528,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
 
 function estiloEjeFecha() { return { tickformat: "%d-%b", tickfont: { size: 11 } }; }
 
-function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida) {
+function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida, targetId = "chart") {
   const layoutBase = {
     margin: { t: 36, r: 20, b: 40, l: 50 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
     font: { family: "Work Sans, sans-serif", color: getComputedStyle(document.body).getPropertyValue("--color-ink") },
@@ -538,7 +538,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
   if (variableElegida === "Lluvia") {
     const serie = vars.precip.slice(-diasPeriodo);
     const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), type: "bar", name: "Lluvia diaria", marker: { color: "#1D5A8C" }, hovertemplate: "%{x}<br>%{y:.1f} mm<extra></extra>" }];
-    Plotly.newPlot("chart", traces, { ...layoutBase, yaxis: { title: "mm/día" }, title: { text: "Lluvia diaria", font: { size: 13 } } }, { displayModeBar: false, responsive: true });
+    Plotly.newPlot(targetId, traces, { ...layoutBase, yaxis: { title: "mm/día" }, title: { text: "Lluvia diaria", font: { size: 13 } } }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Temperatura") {
     const tavg = vars.tavg.slice(-diasPeriodo), tmin = vars.tmin.slice(-diasPeriodo), tmax = vars.tmax.slice(-diasPeriodo);
     const traces = [
@@ -546,7 +546,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
       { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines", fill: "tonexty", fillcolor: "rgba(217,127,43,0.15)", line: { width: 0 }, name: "Rango mín–máx del día", hoverinfo: "skip" },
       { x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5 }, marker: { size: 5 }, name: "Temperatura promedio", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
     ];
-    Plotly.newPlot("chart", traces, {
+    Plotly.newPlot(targetId, traces, {
       ...layoutBase, yaxis: { title: "°C" },
       shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_TMAX, y1: UMBRAL_TMAX, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
       title: { text: `Temperatura diaria (línea punteada: umbral ${UMBRAL_TMAX}°C)`, font: { size: 13 } },
@@ -554,7 +554,7 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
   } else if (variableElegida === "Humedad relativa") {
     const serie = vars.relhum.slice(-diasPeriodo);
     const traces = [{ x: serie.map((p) => p.date), y: serie.map((p) => p.value), mode: "lines+markers", line: { color: "#4FA8C9", width: 2.5 }, marker: { size: 5 }, name: "Humedad relativa", hovertemplate: "%{x}<br>%{y:.0f}%<extra></extra>" }];
-    Plotly.newPlot("chart", traces, {
+    Plotly.newPlot(targetId, traces, {
       ...layoutBase, yaxis: { title: "%" },
       shapes: [{ type: "line", xref: "paper", x0: 0, x1: 1, yref: "y", y0: UMBRAL_HR, y1: UMBRAL_HR, line: { color: "#B23A3A", width: 1.5, dash: "dot" } }],
       title: { text: `Humedad relativa diaria (línea punteada: umbral ${UMBRAL_HR}%)`, font: { size: 13 } },
@@ -748,60 +748,48 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
    MÓDULO: REPORTES DE CAMPO (independiente de la visualización satelital)
    ====================================================================== */
 
-const ETIQUETA_VARIABLE = { precip: "Lluvia", tavg: "Temperatura", relhum: "Humedad relativa" };
-const COLOR_VARIABLE = { precip: "#1D5A8C", tavg: "#D97F2B", relhum: "#4FA8C9" };
-const UNIDAD_VARIABLE = { precip: "mm", tavg: "°C", relhum: "%" };
-const ACCENT_VARIABLE = { precip: "--color-rain", tavg: "--color-temp", relhum: "--color-relhum" };
-const CLAVE_VARIABLE = { "Lluvia": "precip", "Temperatura": "tavg", "Humedad relativa": "relhum" };
-
 const $campoCards = document.getElementById("campo-cards");
 const $campoChart = document.getElementById("campo-chart");
 const $campoVacio = document.getElementById("campo-vacio");
 const $campoMunicipioActual = document.getElementById("campo-municipio-actual");
 const $campoPeriodoActual = document.getElementById("campo-periodo-actual");
 
-function pintarVistaCampo(municipio, variableElegida, fechaObjetivo, fechasVentana, etiqueta) {
+// El registro de campo siempre se mira a "Última semana": los reportes de
+// productores son puntuales (no hay una grilla diaria como en el satélite),
+// así que promediar sobre 2 semanas o un mes tendría demasiados huecos para
+// ser útil. Tampoco hay mapa aquí: cada reporte es un solo punto (la finca
+// del productor), no hay variación espacial que mostrar como en el satélite.
+function construirVarsCampo(municipio, fechasVentana) {
+  const obs = (datos.observaciones || []).filter((o) => o.municipio === municipio && fechasVentana.includes(o.fecha));
+  const porVariable = (clave) => obs
+    .filter((o) => o.variable === clave)
+    .map((o) => ({ date: o.fecha, value: o.valor, reportante: o.reportante, comentario: o.comentario }))
+    .sort((a, b) => (a.date < b.date ? -1 : 1));
+  const precip = porVariable("precip");
+  const tavg = porVariable("tavg");
+  const relhum = porVariable("relhum");
+  return { precip, tavg, tmin: [], tmax: tavg, relhum };
+}
+
+function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
   $campoMunicipioActual.textContent = municipio;
   $campoPeriodoActual.textContent = etiqueta.toLowerCase();
 
-  const varKey = CLAVE_VARIABLE[variableElegida];
-  const unidad = UNIDAD_VARIABLE[varKey];
-  const color = COLOR_VARIABLE[varKey];
-  const accent = ACCENT_VARIABLE[varKey];
+  const varsCampo = construirVarsCampo(municipio, fechasVentana);
+  // diasPeriodo se pasa "de sobra" a propósito: los datos ya vienen
+  // filtrados a la ventana de la semana, así que slice(-N) con N grande no
+  // recorta nada — evita que se pierdan reportes si algún día faltó otro.
+  mostrarIndicadores(varsCampo, 999, etiqueta, variableElegida, null, $campoCards);
 
-  const reportes = (datos.observaciones || [])
-    .filter((o) => o.municipio === municipio && o.variable === varKey && fechasVentana.includes(o.fecha))
-    .sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
-
-  $campoCards.innerHTML = "";
-  if (!reportes.length) {
-    $campoCards.append(tarjeta(`Reportes recibidos — ${etiqueta}`, "0", `${variableElegida} — ningún productor reportó en este período`, accent));
-  } else {
-    const promedio = reportes.reduce((s, r) => s + r.valor, 0) / reportes.length;
-    const ultimo = reportes[reportes.length - 1];
-    $campoCards.append(tarjeta(`Reportes recibidos — ${etiqueta}`, `${reportes.length}`, variableElegida, accent));
-    $campoCards.append(tarjeta("Valor promedio reportado", `${promedio.toFixed(1)} ${unidad}`, "", accent));
-    $campoCards.append(tarjeta("Último reporte", `${ultimo.valor} ${unidad}`, `${fechaEs(ultimo.fecha)}${ultimo.reportante ? " · " + ultimo.reportante : ""}`, accent));
-  }
-
-  if (fechaObjetivo || !reportes.length) {
+  const hayDatos = varsCampo.precip.length || varsCampo.tavg.length || varsCampo.relhum.length;
+  if (!hayDatos) {
     Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
-    $campoVacio.style.display = fechaObjetivo ? "none" : "block";
-    $campoVacio.textContent = `Todavía no hay reportes de campo de ${municipio} para este período.`;
+    $campoVacio.style.display = "block";
+    $campoVacio.textContent = `Todavía no hay reportes de campo de ${municipio} para esta semana.`;
     return;
   }
   $campoVacio.style.display = "none";
-
-  const trace = varKey === "precip"
-    ? { x: reportes.map((r) => r.fecha), y: reportes.map((r) => r.valor), type: "bar", marker: { color }, name: `${variableElegida} reportada`, hovertemplate: `%{x}<br>%{y} ${unidad}<extra></extra>` }
-    : { x: reportes.map((r) => r.fecha), y: reportes.map((r) => r.valor), mode: "lines+markers", line: { color, width: 2.5 }, marker: { size: 7 }, name: `${variableElegida} reportada`, hovertemplate: `%{x}<br>%{y} ${unidad}<extra></extra>` };
-
-  Plotly.newPlot("campo-chart", [trace], {
-    margin: { t: 36, r: 20, b: 40, l: 50 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
-    font: { family: "Work Sans, sans-serif", color: getComputedStyle(document.body).getPropertyValue("--color-ink") },
-    xaxis: estiloEjeFecha(), yaxis: { title: unidad }, showlegend: true, legend: { orientation: "h", y: -0.2 }, height: 380,
-    title: { text: `${variableElegida} reportada en campo`, font: { size: 13 } },
-  }, { displayModeBar: false, responsive: true });
+  graficarPeriodo(varsCampo, 999, etiqueta, municipio, variableElegida, "campo-chart");
 }
 
 // --- Pestañas: alternar entre la vista de fuentes secundarias y la de campo ---
@@ -812,6 +800,7 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     const vista = btn.dataset.vista;
     document.getElementById("vista-secundaria").style.display = vista === "secundaria" ? "" : "none";
     document.getElementById("vista-campo").style.display = vista === "campo" ? "" : "none";
+    $periodo.disabled = vista === "campo"; // en campo el período siempre es "Última semana"
     panel(); // redibuja: evita que un gráfico quede mal dimensionado por haber estado oculto
   });
 });
@@ -839,8 +828,19 @@ function panel() {
   mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo);
   pintarMapa(etiqueta, diasPeriodo, fechaObjetivo);
 
-  const fechasVentana = fechaObjetivo ? [fechaObjetivo] : vars.precip.slice(-diasPeriodo).map((p) => p.date);
-  pintarVistaCampo(municipio, variableElegida, fechaObjetivo, fechasVentana, etiqueta);
+  // El módulo de campo ignora el período elegido arriba: siempre mira los
+  // últimos 7 días calendario, contados desde el mismo "hoy" que usa el
+  // satélite (la última fecha disponible), para que ambas pestañas hablen
+  // del mismo "ahora" aunque cubran ventanas de tiempo distintas.
+  const finCampo = new Date(ultimaFecha);
+  const inicioCampo = new Date(finCampo);
+  inicioCampo.setDate(finCampo.getDate() - 6);
+  const fechasVentanaCampo = [];
+  for (let d = new Date(inicioCampo); d <= finCampo; d.setDate(d.getDate() + 1)) {
+    fechasVentanaCampo.push(d.toISOString().slice(0, 10));
+  }
+  const etiquetaCampo = etiquetaPeriodo("Última semana", 7, ultimaFecha, null);
+  pintarVistaCampo(municipio, variableElegida, fechasVentanaCampo, etiquetaCampo);
 
   if (periodoNombre === "Hoy" || periodoNombre === "Ayer") {
     Plotly.purge("chart"); document.getElementById("chart").innerHTML = "";
