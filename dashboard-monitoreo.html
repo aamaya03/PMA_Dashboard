@@ -92,14 +92,17 @@
   .mapa-etiqueta-mun { font-size: 9px; font-family: var(--font-body); fill: var(--color-ink); paint-order: stroke; stroke: var(--color-panel); stroke-width: 3px; }
   .mapa-nota { font-size: 0.78rem; color: var(--color-ink-soft); margin-top: 12px; }
 
-  .tabs { display: flex; gap: 6px; margin-bottom: 20px; border-bottom: 1px solid var(--color-line); }
-  .tab-btn {
-    font-family: var(--font-body); font-size: 0.9rem; padding: 10px 16px; cursor: pointer;
-    background: none; border: none; border-bottom: 2px solid transparent; color: var(--color-ink-soft);
-    margin-bottom: -1px;
+  .tabs {
+    display: inline-flex; gap: 4px; margin-bottom: 20px; padding: 4px;
+    background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 999px;
   }
-  .tab-btn.activa { color: var(--color-ink); border-bottom-color: var(--color-rain); font-weight: 600; }
-  .tab-btn:hover { color: var(--color-ink); }
+  .tab-btn {
+    font-family: var(--font-body); font-size: 0.92rem; font-weight: 600; padding: 10px 20px; cursor: pointer;
+    background: none; border: none; border-radius: 999px; color: var(--color-ink-soft);
+    transition: background .15s, color .15s;
+  }
+  .tab-btn.activa { color: white; background: var(--color-rain); }
+  .tab-btn:not(.activa):hover { color: var(--color-ink); background: var(--color-bg); }
 
   .campo-subtitulo-fuera { font-size: 0.85rem; color: var(--color-ink-soft); margin-bottom: 14px; }
   .campo-vacio { font-size: 0.85rem; color: var(--color-ink-soft); font-style: italic; padding: 24px 0; text-align: center; }
@@ -159,6 +162,7 @@
   </div>
 
   <div id="vista-campo" style="display:none;">
+    <div class="campo-subtitulo-fuera">Lo que los productores registraron para <span id="campo-municipio-actual"></span>, <span id="campo-periodo-actual"></span> (no disponible para "Hoy" ni "Ayer")</div>
     <div class="cards" id="campo-cards"></div>
     <div class="chart-panel">
       <div id="campo-chart"></div>
@@ -799,7 +803,6 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
     const vista = btn.dataset.vista;
     document.getElementById("vista-secundaria").style.display = vista === "secundaria" ? "" : "none";
     document.getElementById("vista-campo").style.display = vista === "campo" ? "" : "none";
-    $periodo.disabled = vista === "campo"; // en campo el período siempre es "Última semana"
     panel(); // redibuja: evita que un gráfico quede mal dimensionado por haber estado oculto
   });
 });
@@ -827,19 +830,21 @@ function panel() {
   mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo);
   pintarMapa(etiqueta, diasPeriodo, fechaObjetivo);
 
-  // El módulo de campo ignora el período elegido arriba: siempre mira los
-  // últimos 7 días calendario, contados desde el mismo "hoy" que usa el
-  // satélite (la última fecha disponible), para que ambas pestañas hablen
-  // del mismo "ahora" aunque cubran ventanas de tiempo distintas.
-  const finCampo = new Date(ultimaFecha);
-  const inicioCampo = new Date(finCampo);
-  inicioCampo.setDate(finCampo.getDate() - 6);
-  const fechasVentanaCampo = [];
-  for (let d = new Date(inicioCampo); d <= finCampo; d.setDate(d.getDate() + 1)) {
-    fechasVentanaCampo.push(d.toISOString().slice(0, 10));
+  // El registro de campo usa el mismo período elegido arriba (última
+  // semana, 2 semanas, mes), salvo "Hoy" y "Ayer": un reporte puntual no
+  // tiene sentido mirado día a día, así que esas dos opciones no aplican
+  // aquí y se avisa en vez de mostrar datos.
+  if (periodoNombre === "Hoy" || periodoNombre === "Ayer") {
+    $campoMunicipioActual.textContent = municipio;
+    $campoPeriodoActual.textContent = "un período de una semana o más";
+    $campoCards.innerHTML = "";
+    Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
+    $campoVacio.style.display = "block";
+    $campoVacio.textContent = "Elige \"Última semana\" o un período más largo arriba para ver los reportes de campo — un reporte puntual no se puede mirar día a día.";
+  } else {
+    const fechasVentana = vars.precip.slice(-diasPeriodo).map((p) => p.date);
+    pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta);
   }
-  const etiquetaCampo = etiquetaPeriodo("Última semana", 7, ultimaFecha, null);
-  pintarVistaCampo(municipio, variableElegida, fechasVentanaCampo, etiquetaCampo);
 
   if (periodoNombre === "Hoy" || periodoNombre === "Ayer") {
     Plotly.purge("chart"); document.getElementById("chart").innerHTML = "";
