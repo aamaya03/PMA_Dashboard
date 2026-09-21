@@ -21,6 +21,7 @@ import xarray as xr
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2.service_account import Credentials
+import gspread
 
 # ---------------------------------------------------------------------------
 # Configuración (ajusta esto a tu caso si algo no calza)
@@ -62,9 +63,14 @@ VARIABLES = {
 def autenticar_drive():
     info = json.loads(os.environ["GCP_SERVICE_ACCOUNT_KEY"])
     creds = Credentials.from_service_account_info(
-        info, scopes=["https://www.googleapis.com/auth/drive.readonly"]
+        info,
+        scopes=[
+            "https://www.googleapis.com/auth/drive.readonly",
+            "https://www.googleapis.com/auth/spreadsheets.readonly",
+        ],
     )
-    return build("drive", "v3", credentials=creds)
+    return build("drive", "v3", credentials=creds), creds
+
 
 def resolver_destino_si_es_atajo(servicio, archivo):
     """Si el archivo es un acceso directo (shortcut), sigue el enlace y
@@ -97,6 +103,7 @@ def buscar_id_por_ruta(servicio, partes_ruta, id_padre="root"):
             if f.get("mimeType") in ("application/vnd.google-apps.folder", "application/vnd.google-apps.shortcut")
         ]
         if not candidatos:
+            # Diagnóstico: qué hay REALMENTE ahí, para no tener que adivinar
             q_hijos = f"'{actual}' in parents and trashed = false" if actual != "root" else "trashed = false"
             hijos = servicio.files().list(
                 q=q_hijos, fields="files(name, mimeType)", supportsAllDrives=True,
@@ -109,6 +116,7 @@ def buscar_id_por_ruta(servicio, partes_ruta, id_padre="root"):
             )
         actual = resolver_destino_si_es_atajo(servicio, candidatos[0])
     return actual
+
 
 def listar_archivos_en_carpeta(servicio, carpeta_id):
     """Devuelve {nombre_archivo: file_id_real} de una carpeta (una sola
@@ -144,7 +152,7 @@ def descargar_archivo(servicio, file_id, destino_local):
         while not listo:
             _, listo = downloader.next_chunk()
     tamano = os.path.getsize(destino_local)
-    if tamano < 10_000:
+    if tamano < 10_000:  # un .nc diario real pesa MBs; esto casi seguro es un archivo dañado o vacío
         raise IOError(
             f"El archivo descargado '{destino_local}' pesa solo {tamano} bytes — "
             "probablemente Drive no entregó el contenido real (revisa si sigue siendo un acceso "
@@ -200,7 +208,12 @@ def nombre_variable_real(ds, candidatos):
 
 
 def abrir_dataset(archivos):
+    # parallel=True abre los .nc con varios hilos a la vez vía dask, pero la
+    # librería HDF5 detrás de netCDF4 no siempre es segura para eso y puede
+    # colgarse o reventar (segmentation fault) sin ni siquiera un error de
+    # Python. En serie es un poco más lento, pero confiable.
     return xr.open_mfdataset(archivos, combine="nested", concat_dim="time", parallel=False)
+
 
 def extraer_serie_punto(archivos, var_candidatos, lat, lon):
     valores, fechas, var_real = [], [], None
@@ -270,11 +283,61 @@ def serie_a_lista(serie):
 
 
 # ---------------------------------------------------------------------------
+# Reportes de campo (Google Sheets que diligencian los productores)
+# ---------------------------------------------------------------------------
+
+SHEET_ID_REPORTES = "1XA1t4_6NZdrORj91GW7I0ZORgggrUNNu72kitz7pdtk"  # Hoja "Reportes de campo PMA"
+
+VARIABLE_SHEET_A_CLAVE = {
+    "Lluvia (mm)": "precip",
+    "Temperatura (°C)": "tavg",
+    "Humedad relativa (%)": "relhum",
+}
+
+
+def leer_reportes_de_campo(creds, sheet_id):
+    """Lee la hoja de Google Sheets que diligencian los productores/técnicos
+    cada semana y la convierte al mismo formato que ya usa el dashboard
+    (datos.observaciones). Filas incompletas o con un municipio/variable que
+    no calza exactamente con lo esperado se ignoran silenciosamente (se
+    listan al final para que sea fácil detectar un typo en la hoja)."""
+    gc = gspread.authorize(creds)
+    hoja = gc.open_by_key(sheet_id).sheet1
+    filas = hoja.get_all_records()
+
+    observaciones, ignoradas = [], 0
+    for fila in filas:
+        variable = VARIABLE_SHEET_A_CLAVE.get(str(fila.get("variable", "")).strip())
+        municipio = str(fila.get("municipio", "")).strip()
+        fecha = str(fila.get("fecha", "")).strip()
+        try:
+            valor = float(fila.get("valor"))
+        except (TypeError, ValueError):
+            valor = None
+
+        if not variable or municipio not in MUNICIPIOS or not fecha or valor is None:
+            ignoradas += 1
+            continue
+
+        observaciones.append({
+            "municipio": municipio,
+            "fecha": fecha,
+            "variable": variable,
+            "valor": round(valor, 1),
+            "comentario": str(fila.get("comentario", "")).strip(),
+        })
+
+    if ignoradas:
+        print(f"⚠️  {ignoradas} fila(s) del Sheet de reportes se ignoraron por estar incompletas o con un valor inesperado.")
+    return observaciones
+
+
+# ---------------------------------------------------------------------------
 # Pipeline principal
 # ---------------------------------------------------------------------------
 
 def main():
-    servicio = autenticar_drive()
+    servicio, creds = autenticar_drive()
     gdf, gdf_proj = cargar_geometrias()
 
     # Descarga cada variable una sola vez (no una vez por municipio)
@@ -305,10 +368,18 @@ def main():
         }
         print(f"{nombre}: grilla con {len(municipios_json[nombre]['grid'])} celdas")
 
+    print("Leyendo reportes de campo...")
+    try:
+        observaciones = leer_reportes_de_campo(creds, SHEET_ID_REPORTES)
+        print(f"{len(observaciones)} reporte(s) de campo cargados.")
+    except Exception as e:
+        print(f"⚠️  No se pudieron leer los reportes de campo (¿ya compartiste la hoja con la cuenta de servicio?): {e}")
+        observaciones = []
+
     data_json = {
         "generado_en": datetime.utcnow().isoformat(),
         "municipios": municipios_json,
-        "observaciones": [],
+        "observaciones": observaciones,
         "enso": {
             "valor": 1.9,  # TODO: automatizar con la tabla ONI del NOAA CPC más adelante
             "categoria": "El Niño fuerte",
@@ -324,3 +395,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
