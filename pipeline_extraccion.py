@@ -294,7 +294,8 @@ SHEET_ID_REPORTES = "1XA1t4_6NZdrORj91GW7I0ZORgggrUNNu72kitz7pdtk"  # Hoja "Repo
 
 VARIABLE_SHEET_A_CLAVE = {
     "Lluvia (mm)": "precip",
-    "Temperatura (°C)": "tavg",
+    "Temperatura máxima (°C)": "tmax",
+    "Temperatura mínima (°C)": "tmin",
     "Humedad relativa (%)": "relhum",
 }
 
