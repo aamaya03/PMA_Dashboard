@@ -219,6 +219,12 @@
   <div id="vista-campo" style="display:none;">
     <div class="cards" id="campo-cards"></div>
     <div class="chart-panel">
+      <div class="temp-toggle" id="campo-temp-toggle" style="display:none;">
+        <label class="temp-toggle-check">
+          <input type="checkbox" id="chk-promedio-temp-campo">
+          Mostrar también la temperatura promedio
+        </label>
+      </div>
       <div id="campo-chart"></div>
       <div class="campo-vacio" id="campo-vacio" style="display:none;"></div>
     </div>
@@ -467,6 +473,8 @@ const UMBRALES_LLUVIA_POR_DIAS = {
   30: { seco: 15, moderada: 150, fuerte: 300 },  // Último mes
 };
 
+function dias(n) { return `${n} día${n === 1 ? "" : "s"}`; }
+
 function fechaEs(iso) {
   const [y, m, d] = iso.split("-").map(Number);
   return `${String(d).padStart(2, "0")}-${MESES_ES[m - 1]}`;
@@ -636,8 +644,8 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       contenedor.append(tarjeta(`Lluvia — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-rain", "🌧️"));
     } else if (ind.precip_dias_periodo !== undefined) {
       const diasSinLluvia = ind.precip_dias_periodo - ind.precip_dias_con_lluvia;
-      contenedor.append(tarjeta(`Días con lluvia — ${etiqueta}`, `${ind.precip_dias_con_lluvia} días`, "", "--color-rain", "🌧️"));
-      contenedor.append(tarjeta(`Días secos — ${etiqueta}`, `${diasSinLluvia} días`, "", "--color-rain", "☀️"));
+      contenedor.append(tarjeta(`Días con lluvia — ${etiqueta}`, dias(ind.precip_dias_con_lluvia), "", "--color-rain", "🌧️"));
+      contenedor.append(tarjeta(`Días secos — ${etiqueta}`, dias(diasSinLluvia), "", "--color-rain", "☀️"));
       contenedor.append(tarjeta(`Lluvia total — ${etiqueta}`, `${ind.precip_total.toFixed(1)} mm`, "", "--color-rain", "🌧️"));
     }
   } else if (variableElegida === "Temperatura") {
@@ -650,7 +658,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp", "🌡️"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      contenedor.append(tarjeta(`Temperaturas por encima de ${umbralTmax}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, `Umbral para ${sistemaProductivo}`, "--color-temp", "🔥"));
+      contenedor.append(tarjeta(`Temperaturas por encima de ${umbralTmax}°C`, `${ind.dias_tmax_sobre_umbral} de ${dias(ind.dias_tmax_total)}`, `Umbral para ${sistemaProductivo}`, "--color-temp", "🔥"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
@@ -659,7 +667,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
       contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum", "💧"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        contenedor.append(tarjeta(`Humedad por encima de ${umbralHr}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, `Umbral para ${sistemaProductivo}`, "--color-relhum", "💦"));
+        contenedor.append(tarjeta(`Humedad por encima de ${umbralHr}%`, `${ind.dias_hr_sobre_umbral} de ${dias(ind.dias_hr_total)}`, `Umbral para ${sistemaProductivo}`, "--color-relhum", "💦"));
       }
     }
   }
@@ -953,9 +961,16 @@ function construirVarsCampo(municipio, fechasVentana) {
   const tmin = porVariable("tmin");
   const relhum = porVariable("relhum");
 
+  // El promedio no se reporta directo — se calcula como el punto medio entre
+  // máxima y mínima, solo en las fechas donde el productor reportó ambas.
+  const tminPorFecha = Object.fromEntries(tmin.map((p) => [p.date, p.value]));
+  const tavg = tmax
+    .filter((p) => tminPorFecha[p.date] !== undefined)
+    .map((p) => ({ date: p.date, value: +((p.value + tminPorFecha[p.date]) / 2).toFixed(1) }));
+
   return {
     precip,
-    tavg: [],
+    tavg,
     tmin,
     tmax,
     relhum
@@ -1080,7 +1095,16 @@ function pintarMapaCampo(municipio) {
 }
 
 function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, sistemaProductivo) {
-  pintarMapaCampo(municipio);
+  // El mapa de Leaflet solo se crea/actualiza cuando su contenedor ya es
+  // visible. Si se inicializa mientras la pestaña está oculta (display:none
+  // — pasa la primera vez que carga la página, ya que "Monitoreo satelital"
+  // es la pestaña activa por defecto), Leaflet calcula un tamaño de 0x0 y
+  // el centrado queda mal (se ve el mundo entero repetido). Cuando el
+  // usuario sí cambie a esta pestaña, panel() se vuelve a ejecutar con el
+  // contenedor ya visible y ahí se dibuja bien.
+  if (document.getElementById("vista-campo").style.display !== "none") {
+    pintarMapaCampo(municipio);
+  }
 
 
   const varsCampo = construirVarsCampo(municipio, fechasVentana);
@@ -1111,9 +1135,15 @@ const DESCRIPCION_POR_VISTA = {
   campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios.`,
 };
 
-document.getElementById("chk-promedio-temp").addEventListener("change", (e) => {
-  mostrarPromedioTemp = e.target.checked;
-  panel();
+const $chkPromedioTemp = document.getElementById("chk-promedio-temp");
+const $chkPromedioTempCampo = document.getElementById("chk-promedio-temp-campo");
+[$chkPromedioTemp, $chkPromedioTempCampo].forEach((chk) => {
+  chk.addEventListener("change", (e) => {
+    mostrarPromedioTemp = e.target.checked;
+    $chkPromedioTemp.checked = mostrarPromedioTemp; // mantiene sincronizados los dos interruptores
+    $chkPromedioTempCampo.checked = mostrarPromedioTemp;
+    panel();
+  });
 });
 
 function actualizarOpcionesPeriodo(vista) {
@@ -1162,6 +1192,7 @@ function panel() {
   const vars = datos.municipios[municipio];
 
   document.getElementById("temp-toggle").style.display = variableElegida === "Temperatura" ? "flex" : "none";
+  document.getElementById("campo-temp-toggle").style.display = variableElegida === "Temperatura" ? "flex" : "none";
   document.getElementById("selector-cultivo").style.display =
     (variableElegida === "Temperatura" || variableElegida === "Humedad relativa") ? "flex" : "none";
   const ultimaFecha = vars.precip.slice(-1)[0].date;
@@ -1255,3 +1286,4 @@ iniciar();
 </script>
 </body>
 </html>
+
