@@ -121,6 +121,16 @@
   .leyenda-rango { font-size: 0.78rem; color: var(--color-ink-soft); margin-left: auto; }
   .mapa-nota { font-size: 0.78rem; color: var(--color-ink-soft); margin-top: 12px; }
 
+  .selector-cultivo {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 10px 14px;
+    background: var(--color-panel); border: 1px solid var(--color-line); border-left: 3px solid var(--color-temp);
+    border-radius: var(--radius); font-size: 0.85rem; color: var(--color-ink-soft); flex-wrap: wrap;
+  }
+  .selector-cultivo select {
+    font-family: var(--font-body); font-size: 0.88rem; padding: 5px 8px;
+    border: 1px solid var(--color-line); border-radius: 4px; background: var(--color-bg); color: var(--color-ink); min-width: 140px;
+  }
+
   .tabs {
     display: inline-flex; gap: 4px; margin-bottom: 20px; padding: 4px;
     background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 999px;
@@ -166,6 +176,11 @@
     <div class="field"><label for="sel-municipio">Municipio</label><select id="sel-municipio"></select></div>
     <div class="field"><label for="sel-periodo">Período</label><select id="sel-periodo"></select></div>
     <div class="field"><label for="sel-variable">Variable</label><select id="sel-variable"></select></div>
+  </div>
+
+  <div class="selector-cultivo" id="selector-cultivo" style="display:none;">
+    <label for="sel-sistema">Umbral según sistema productivo:</label>
+    <select id="sel-sistema"></select>
   </div>
 
   <div class="tabs">
@@ -410,8 +425,27 @@ const MESES_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","n
    UMBRALES DE EJEMPLO — se editan aquí en el código, no desde la interfaz.
    Cámbialos cuando tengas los valores reales para cada municipio/variable.
    ------------------------------------------------------------------------ */
-const UMBRAL_TMAX = 33;  // °C — días de calor
-const UMBRAL_HR = 82;    // % — días de humedad alta
+/* ------------------------------------------------------------------------
+   SISTEMA PRODUCTIVO: los umbrales de "días de calor" / "días de humedad
+   alta" dependen del cultivo (no es lo mismo el estrés por calor en arroz
+   que en café). Los cultivos disponibles dependen del departamento —lista
+   tomada de las fichas departamentales del Ministerio de Agricultura—.
+   "Ganadería" no se desglosa, es una sola opción genérica.
+   Los umbrales de abajo son de ejemplo por ahora — se reemplazan cuando
+   tengas el análisis agronómico real por cultivo.
+   ------------------------------------------------------------------------ */
+const CULTIVOS_POR_DEPARTAMENTO = {
+  Sucre: ["Arroz", "Maíz", "Ñame", "Yuca", "Ajonjolí", "Ganadería"],
+  Tolima: ["Arroz", "Café", "Maíz", "Soya", "Algodón", "Ganadería"],
+};
+const UMBRAL_TMAX_POR_CULTIVO = {
+  Arroz: 35, Maíz: 33, Ñame: 32, Yuca: 34, Ajonjolí: 33,
+  Café: 28, Soya: 32, Algodón: 36, Ganadería: 33,
+};
+const UMBRAL_HR_POR_CULTIVO = {
+  Arroz: 85, Maíz: 80, Ñame: 82, Yuca: 83, Ajonjolí: 78,
+  Café: 75, Soya: 80, Algodón: 78, Ganadería: 80,
+};
 
 // Umbrales de lluvia ACUMULADA, uno por cada duración de período — un
 // acumulado de "Fuerte" en un solo día es mucho menor que uno de "Fuerte"
@@ -912,7 +946,7 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
 const $headerDescripcion = document.getElementById("header-descripcion");
 const DESCRIPCION_POR_VISTA = {
   secundaria: () => `Lluvia, temperatura y humedad relativa de los últimos días para ${listaMunicipios()}, calculadas a partir de datos satelitales (MSWX / MSWEP). Incluye mapa por variable, gráficos por período y alertas de días por encima del umbral de calor o humedad.`,
-  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios`,
+  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios — un complemento directo de la fuente satelital.`,
 };
 
 document.getElementById("chk-promedio-temp").addEventListener("change", (e) => {
