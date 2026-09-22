@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 <style>
   :root {
     --color-bg: #F3F5EE;
@@ -787,6 +788,11 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
     }).addTo(mapaLeaflet);
     mapaLeaflet.addControl(crearBrujula());
   }
+  // El contenedor pudo haber estado oculto (display:none) mientras se veía
+  // la otra pestaña — hay que recalcular el tamaño ANTES de centrar, o
+  // fitBounds calcula con un tamaño viejo/cero y el mapa queda mal ubicado
+  // (todo el mundo repetido en zoom muy bajo).
+  mapaLeaflet.invalidateSize();
 
   capasMapaActuales.forEach((capa) => mapaLeaflet.removeLayer(capa));
   capasMapaActuales = [];
@@ -813,16 +819,28 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
     const lonStep = lonsUnicos.length > 1 ? Math.min(...lonsUnicos.slice(1).map((v, i) => v - lonsUnicos[i])) : 0.03;
     const latStep = latsUnicos.length > 1 ? Math.min(...latsUnicos.slice(1).map((v, i) => v - latsUnicos[i])) : 0.03;
 
+    // Recorte geométrico real (no solo "¿el centro cae adentro?"): cada
+    // celda se intersecta con el polígono verdadero del municipio, así que
+    // lo que se pinta nunca se sale de la forma ni deja huecos en el borde.
+    const poligonoMunicipioTurf = feat.geometry.type === "Polygon"
+      ? turf.polygon(feat.geometry.coordinates)
+      : turf.multiPolygon(feat.geometry.coordinates);
+
     const capaGrilla = L.layerGroup();
     celdas.forEach((celda) => {
-      if (!puntoEnPoligono(celda.lon, celda.lat, feat.geometry)) return; // deja fuera lo que cae fuera del municipio
       const agregado = agregadoCeldaPeriodo(celda.valores, varsObjetivo, diasPeriodo, fechaObjetivo, varKey);
       const color = categoriaVariable(agregado, varKey, diasPeriodo).color;
-      const bounds = [
-        [celda.lat - latStep / 2, celda.lon - lonStep / 2],
-        [celda.lat + latStep / 2, celda.lon + lonStep / 2],
-      ];
-      L.rectangle(bounds, { stroke: false, fillColor: color, fillOpacity: 0.75 }).addTo(capaGrilla);
+      const celdaTurf = turf.polygon([[
+        [celda.lon - lonStep / 2, celda.lat - latStep / 2],
+        [celda.lon + lonStep / 2, celda.lat - latStep / 2],
+        [celda.lon + lonStep / 2, celda.lat + latStep / 2],
+        [celda.lon - lonStep / 2, celda.lat + latStep / 2],
+        [celda.lon - lonStep / 2, celda.lat - latStep / 2],
+      ]]);
+      let recorte;
+      try { recorte = turf.intersect(celdaTurf, poligonoMunicipioTurf); } catch (e) { recorte = null; }
+      if (!recorte) return; // esta celda no toca el municipio para nada
+      L.geoJSON(recorte, { style: { stroke: false, fillColor: color, fillOpacity: 0.75 } }).addTo(capaGrilla);
     });
     capaGrilla.addTo(mapaLeaflet);
     capasMapaActuales.push(capaGrilla);
@@ -844,7 +862,6 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
   } else {
     mapaLeaflet.fitBounds(capaContexto.getBounds().pad(0.05));
   }
-  setTimeout(() => mapaLeaflet.invalidateSize(), 50);
 }
 
 /* ======================================================================
