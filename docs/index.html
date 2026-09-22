@@ -643,7 +643,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
     } else if (ind.precip_dias_periodo !== undefined) {
       const diasSinLluvia = ind.precip_dias_periodo - ind.precip_dias_con_lluvia;
       contenedor.append(tarjeta(`Días con lluvia — ${etiqueta}`, `${dias(ind.precip_dias_con_lluvia)} con lluvia`, "", "--color-rain", "🌧️"));
-      contenedor.append(tarjeta(`Días secos — ${etiqueta}`, `${dias(diasSinLluvia)} secos`, "", "--color-rain", "☀️"));
+      contenedor.append(tarjeta(`Días secos — ${etiqueta}`, `${dias(diasSinLluvia)} ${diasSinLluvia === 1 ? "seco" : "secos"}`, "", "--color-rain", "☀️"));
       contenedor.append(tarjeta(`Lluvia total — ${etiqueta}`, `${ind.precip_total.toFixed(1)} mm`, "", "--color-rain", "🌧️"));
     }
   } else if (variableElegida === "Temperatura") {
