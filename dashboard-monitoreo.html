@@ -1026,7 +1026,7 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, s
 const $headerDescripcion = document.getElementById("header-descripcion");
 const DESCRIPCION_POR_VISTA = {
   secundaria: () => `Lluvia, temperatura y humedad relativa de los últimos días para ${listaMunicipios()}, calculadas a partir de datos satelitales (MSWX / MSWEP). Incluye mapa por variable, gráficos por período y alertas de días por encima del umbral de calor o humedad.`,
-  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios.`,
+  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios — un complemento directo de la fuente satelital.`,
 };
 
 document.getElementById("chk-promedio-temp").addEventListener("change", (e) => {
@@ -1090,27 +1090,42 @@ function panel() {
   }
 
   const etiqueta = etiquetaPeriodo(periodoNombre, diasPeriodo, ultimaFecha, fechaObjetivo);
-  mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo, $cards, $sistema.value);
-  pintarMapa(etiqueta, diasPeriodo, fechaObjetivo);
 
-  // El registro de campo usa el mismo período elegido arriba (última
-  // semana, 2 semanas, mes), salvo "Ayer": un reporte puntual no tiene
-  // sentido mirado día a día, así que esa opción no aplica aquí y se
-  // avisa en vez de mostrar datos.
-  if (periodoNombre === "Última fecha") {
-    $campoCards.innerHTML = "";
-    Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
-    $campoVacio.style.display = "block";
-    $campoVacio.textContent = "Elige \"Última semana\" o un período más largo arriba para ver los reportes comunitarios — un reporte puntual no se puede mirar día a día.";
-  } else {
-    const fechasVentana = vars.precip.slice(-diasPeriodo).map((p) => p.date);
-    pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, $sistema.value);
-  }
+  // Las tarjetas y la gráfica van PRIMERO y a propósito: son lo esencial y
+  // lo más confiable (no dependen de librerías externas de mapas). Si algo
+  // más abajo (mapa satelital, mapa de la finca) llega a fallar por lo que
+  // sea — un CDN externo que no cargó, por ejemplo — ya alcanzaron a
+  // dibujarse y no se quedan en blanco por un error ajeno a ellas.
+  mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo, $cards, $sistema.value);
 
   if (periodoNombre === "Última fecha") {
     Plotly.purge("chart"); document.getElementById("chart").innerHTML = "";
   } else {
     graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida);
+  }
+
+  try {
+    pintarMapa(etiqueta, diasPeriodo, fechaObjetivo);
+  } catch (e) {
+    console.error("No se pudo dibujar el mapa satelital:", e);
+  }
+
+  // El registro de campo usa el mismo período elegido arriba (última
+  // semana, 2 semanas, mes), salvo "Ayer": un reporte puntual no tiene
+  // sentido mirado día a día, así que esa opción no aplica aquí y se
+  // avisa en vez de mostrar datos.
+  try {
+    if (periodoNombre === "Última fecha") {
+      $campoCards.innerHTML = "";
+      Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
+      $campoVacio.style.display = "block";
+      $campoVacio.textContent = "Elige \"Última semana\" o un período más largo arriba para ver los reportes comunitarios — un reporte puntual no se puede mirar día a día.";
+    } else {
+      const fechasVentana = vars.precip.slice(-diasPeriodo).map((p) => p.date);
+      pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, $sistema.value);
+    }
+  } catch (e) {
+    console.error("No se pudo dibujar el módulo de monitoreo comunitario:", e);
   }
 }
 
@@ -1126,3 +1141,4 @@ iniciar();
 </script>
 </body>
 </html>
+
