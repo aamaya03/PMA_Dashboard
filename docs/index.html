@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Turf.js/6.5.0/turf.min.js"></script>
 <style>
   :root {
     --color-bg: #F3F5EE;
@@ -120,6 +121,16 @@
   .leyenda-rango { font-size: 0.78rem; color: var(--color-ink-soft); margin-left: auto; }
   .mapa-nota { font-size: 0.78rem; color: var(--color-ink-soft); margin-top: 12px; }
 
+  .selector-cultivo {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 10px 14px;
+    background: var(--color-panel); border: 1px solid var(--color-line); border-left: 3px solid var(--color-temp);
+    border-radius: var(--radius); font-size: 0.85rem; color: var(--color-ink-soft); flex-wrap: wrap;
+  }
+  .selector-cultivo select {
+    font-family: var(--font-body); font-size: 0.88rem; padding: 5px 8px;
+    border: 1px solid var(--color-line); border-radius: 4px; background: var(--color-bg); color: var(--color-ink); min-width: 140px;
+  }
+
   .tabs {
     display: inline-flex; gap: 4px; margin-bottom: 20px; padding: 4px;
     background: var(--color-panel); border: 1px solid var(--color-line); border-radius: 999px;
@@ -165,6 +176,11 @@
     <div class="field"><label for="sel-municipio">Municipio</label><select id="sel-municipio"></select></div>
     <div class="field"><label for="sel-periodo">Período</label><select id="sel-periodo"></select></div>
     <div class="field"><label for="sel-variable">Variable</label><select id="sel-variable"></select></div>
+  </div>
+
+  <div class="selector-cultivo" id="selector-cultivo" style="display:none;">
+    <label for="sel-sistema">Umbral según sistema productivo:</label>
+    <select id="sel-sistema"></select>
   </div>
 
   <div class="tabs">
@@ -409,8 +425,27 @@ const MESES_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","n
    UMBRALES DE EJEMPLO — se editan aquí en el código, no desde la interfaz.
    Cámbialos cuando tengas los valores reales para cada municipio/variable.
    ------------------------------------------------------------------------ */
-const UMBRAL_TMAX = 33;  // °C — días de calor
-const UMBRAL_HR = 82;    // % — días de humedad alta
+/* ------------------------------------------------------------------------
+   SISTEMA PRODUCTIVO: los umbrales de "días de calor" / "días de humedad
+   alta" dependen del cultivo (no es lo mismo el estrés por calor en arroz
+   que en café). Los cultivos disponibles dependen del departamento —lista
+   tomada de las fichas departamentales del Ministerio de Agricultura—.
+   "Ganadería" no se desglosa, es una sola opción genérica.
+   Los umbrales de abajo son de ejemplo por ahora — se reemplazan cuando
+   tengas el análisis agronómico real por cultivo.
+   ------------------------------------------------------------------------ */
+const CULTIVOS_POR_DEPARTAMENTO = {
+  Sucre: ["Arroz", "Maíz", "Ñame", "Yuca", "Ajonjolí", "Ganadería"],
+  Tolima: ["Arroz", "Café", "Maíz", "Soya", "Algodón", "Ganadería"],
+};
+const UMBRAL_TMAX_POR_CULTIVO = {
+  Arroz: 35, Maíz: 33, Ñame: 32, Yuca: 34, Ajonjolí: 33,
+  Café: 28, Soya: 32, Algodón: 36, Ganadería: 33,
+};
+const UMBRAL_HR_POR_CULTIVO = {
+  Arroz: 85, Maíz: 80, Ñame: 82, Yuca: 83, Ajonjolí: 78,
+  Café: 75, Soya: 80, Algodón: 78, Ganadería: 80,
+};
 
 // Umbrales de lluvia ACUMULADA, uno por cada duración de período — un
 // acumulado de "Fuerte" en un solo día es mucho menor que uno de "Fuerte"
@@ -787,6 +822,11 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
     }).addTo(mapaLeaflet);
     mapaLeaflet.addControl(crearBrujula());
   }
+  // El contenedor pudo haber estado oculto (display:none) mientras se veía
+  // la otra pestaña — hay que recalcular el tamaño ANTES de centrar, o
+  // fitBounds calcula con un tamaño viejo/cero y el mapa queda mal ubicado
+  // (todo el mundo repetido en zoom muy bajo).
+  mapaLeaflet.invalidateSize();
 
   capasMapaActuales.forEach((capa) => mapaLeaflet.removeLayer(capa));
   capasMapaActuales = [];
@@ -813,16 +853,28 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
     const lonStep = lonsUnicos.length > 1 ? Math.min(...lonsUnicos.slice(1).map((v, i) => v - lonsUnicos[i])) : 0.03;
     const latStep = latsUnicos.length > 1 ? Math.min(...latsUnicos.slice(1).map((v, i) => v - latsUnicos[i])) : 0.03;
 
+    // Recorte geométrico real (no solo "¿el centro cae adentro?"): cada
+    // celda se intersecta con el polígono verdadero del municipio, así que
+    // lo que se pinta nunca se sale de la forma ni deja huecos en el borde.
+    const poligonoMunicipioTurf = feat.geometry.type === "Polygon"
+      ? turf.polygon(feat.geometry.coordinates)
+      : turf.multiPolygon(feat.geometry.coordinates);
+
     const capaGrilla = L.layerGroup();
     celdas.forEach((celda) => {
-      if (!puntoEnPoligono(celda.lon, celda.lat, feat.geometry)) return; // deja fuera lo que cae fuera del municipio
       const agregado = agregadoCeldaPeriodo(celda.valores, varsObjetivo, diasPeriodo, fechaObjetivo, varKey);
       const color = categoriaVariable(agregado, varKey, diasPeriodo).color;
-      const bounds = [
-        [celda.lat - latStep / 2, celda.lon - lonStep / 2],
-        [celda.lat + latStep / 2, celda.lon + lonStep / 2],
-      ];
-      L.rectangle(bounds, { stroke: false, fillColor: color, fillOpacity: 0.75 }).addTo(capaGrilla);
+      const celdaTurf = turf.polygon([[
+        [celda.lon - lonStep / 2, celda.lat - latStep / 2],
+        [celda.lon + lonStep / 2, celda.lat - latStep / 2],
+        [celda.lon + lonStep / 2, celda.lat + latStep / 2],
+        [celda.lon - lonStep / 2, celda.lat + latStep / 2],
+        [celda.lon - lonStep / 2, celda.lat - latStep / 2],
+      ]]);
+      let recorte;
+      try { recorte = turf.intersect(celdaTurf, poligonoMunicipioTurf); } catch (e) { recorte = null; }
+      if (!recorte) return; // esta celda no toca el municipio para nada
+      L.geoJSON(recorte, { style: { stroke: false, fillColor: color, fillOpacity: 0.75 } }).addTo(capaGrilla);
     });
     capaGrilla.addTo(mapaLeaflet);
     capasMapaActuales.push(capaGrilla);
@@ -844,7 +896,6 @@ function pintarMapa(etiqueta, diasPeriodo, fechaObjetivo) {
   } else {
     mapaLeaflet.fitBounds(capaContexto.getBounds().pad(0.05));
   }
-  setTimeout(() => mapaLeaflet.invalidateSize(), 50);
 }
 
 /* ======================================================================
