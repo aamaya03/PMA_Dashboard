@@ -972,34 +972,45 @@ function construirVarsCampo(municipio, fechasVentana) {
    reemplaza por esos datos.
    ------------------------------------------------------------------------ */
 const puntoFincaCache = {};
+
 function obtenerPuntoFinca(nombreMunicipio) {
-  if (puntoFincaCache[nombreMunicipio]) return puntoFincaCache[nombreMunicipio];
+  if (puntoFincaCache[nombreMunicipio]) {
+    return puntoFincaCache[nombreMunicipio];
+  }
+
   const dept = MUNICIPIO_DEPARTAMENTO[nombreMunicipio];
-  const feat = DEPARTAMENTOS_GEO[dept].features.find((f) => f.properties.target === nombreMunicipio);
-  const [minlon, maxlon, minlat, maxlat] = bboxDeGeometria(feat.geometry);
-  const rand = pseudoRandom(MUNICIPIOS.indexOf(nombreMunicipio) * 4321 + 7);
-  let lon, lat, intentos = 0;
-  do {
-    lon = minlon + rand() * (maxlon - minlon);
-    lat = minlat + rand() * (maxlat - minlat);
-    intentos++;
-  } while (!puntoEnPoligono(lon, lat, feat.geometry) && intentos < 300);
-  puntoFincaCache[nombreMunicipio] = [lat, lon];
-  return puntoFincaCache[nombreMunicipio];
+  const feat = DEPARTAMENTOS_GEO[dept].features.find(
+    (f) => f.properties.target === nombreMunicipio
+  );
+
+  if (!feat || !feat.geometry) {
+    return null;
+  }
+
+  const bounds = L.geoJSON(feat).getBounds();
+
+  if (!bounds.isValid()) {
+    return null;
+  }
+
+  const centro = bounds.getCenter();
+  const punto = [centro.lat, centro.lng];
+
+  puntoFincaCache[nombreMunicipio] = punto;
+  return punto;
 }
 
 let mapaCampoLeaflet = null;
 let capaCampoContorno = null;
 let capaCampoMarcador = null;
+let capaCampoMarcador = null;
 
 function pintarMapaCampo(municipio) {
   const dept = MUNICIPIO_DEPARTAMENTO[municipio];
-  const feat = DEPARTAMENTOS_GEO[dept].features.find(
-    (f) => f.properties.target === municipio
-  );
+  const datosDepto = DEPARTAMENTOS_GEO[dept];
 
-  if (!feat || !feat.geometry) {
-    console.warn("No hay geometría válida para el municipio:", municipio);
+  if (!datosDepto || !datosDepto.features) {
+    console.warn("No hay geometría para el departamento:", dept);
     return;
   }
 
@@ -1020,7 +1031,10 @@ function pintarMapaCampo(municipio) {
 
   mapaCampoLeaflet.invalidateSize();
 
-  // Eliminar las capas anteriores de forma segura
+  // ------------------------------------------------------------
+  // Limpiar capas anteriores
+  // ------------------------------------------------------------
+
   if (capaCampoContorno) {
     try {
       if (mapaCampoLeaflet.hasLayer(capaCampoContorno)) {
@@ -1032,53 +1046,85 @@ function pintarMapaCampo(municipio) {
     capaCampoContorno = null;
   }
 
+  // Limpiar el grupo de marcadores anterior
   if (capaCampoMarcador) {
     try {
       if (mapaCampoLeaflet.hasLayer(capaCampoMarcador)) {
-        mapaCampoLeaflet.removeLayer(capaCampoMarcador);
+        mapaCampoMarcador.clearLayers(); // Elimina todos los marcadores internos
+        mapaCampoLeaflet.removeLayer(capaCampoMarcador); // Remueve la capa del mapa
       }
     } catch (e) {
-      console.warn("No se pudo eliminar el marcador anterior:", e);
+      console.warn("No se pudo eliminar el grupo de marcadores anterior:", e);
     }
     capaCampoMarcador = null;
   }
 
-  // Crear nuevo contorno
-  try {
-    capaCampoContorno = L.geoJSON(feat, {
-      style: {
-        color: "#B23A3A",
-        weight: 3,
-        fill: false
-      }
-    }).addTo(mapaCampoLeaflet);
-  } catch (e) {
-    console.error("Error dibujando geometría del municipio:", municipio, feat, e);
-    capaCampoContorno = null;
-    return;
-  }
+  // ------------------------------------------------------------
+  // Dibujar todos los municipios del departamento
+  // ------------------------------------------------------------
 
-  // Crear marcador
-  const [lat, lon] = obtenerPuntoFinca(municipio);
+  capaCampoContorno = L.geoJSON(datosDepto, {
+    style: function (feature) {
+      const esSeleccionado =
+        feature.properties.target === municipio;
 
-  capaCampoMarcador = L.circleMarker([lat, lon], {
-    radius: 8,
-    color: "white",
-    weight: 2,
-    fillColor: "#B23A3A",
-    fillOpacity: 1
-  })
-    .bindTooltip(`Finca en ${municipio} (ubicación de ejemplo)`)
-    .addTo(mapaCampoLeaflet);
+      return {
+        color: esSeleccionado ? "#B23A3A" : "#FFFFFF",
+        weight: esSeleccionado ? 4 : 1,
+        fillColor: esSeleccionado ? "#B23A3A" : "#FFFFFF",
+        fillOpacity: esSeleccionado ? 0.18 : 0.03
+      };
+    }
+  }).addTo(mapaCampoLeaflet);
 
-  // Ajustar mapa al contorno
-  const bounds = capaCampoContorno.getBounds();
+  // ------------------------------------------------------------
+  // Puntos de los municipios con monitoreo comunitario
+  // ------------------------------------------------------------
 
-  if (bounds.isValid()) {
-    mapaCampoLeaflet.fitBounds(bounds.pad(0.15));
+  // Creamos un nuevo LayerGroup para almacenar todos los marcadores
+  capaCampoMarcador = L.layerGroup().addTo(mapaCampoLeaflet);
+
+  MUNICIPIOS.forEach((nombreMunicipio) => {
+    if (MUNICIPIO_DEPARTAMENTO[nombreMunicipio] !== dept) {
+      return;
+    }
+
+    const punto = obtenerPuntoFinca(nombreMunicipio);
+
+    if (!punto) {
+      return;
+    }
+
+    const esSeleccionado = nombreMunicipio === municipio;
+
+    const marcador = L.circleMarker(punto, {
+      radius: esSeleccionado ? 9 : 7,
+      color: "#FFFFFF",
+      weight: 2,
+      fillColor: esSeleccionado ? "#B23A3A" : "#1F6FEB",
+      fillOpacity: 1
+    });
+
+    marcador.bindTooltip(
+      `<strong>${nombreMunicipio}</strong><br>` +
+      `${esSeleccionado ? "Municipio seleccionado" : "Monitoreo comunitario"}`
+    );
+
+    // En lugar de .addTo(mapaCampoLeaflet), los agregamos al grupo:
+    capaCampoMarcador.addLayer(marcador);
+  });
+
+  // ------------------------------------------------------------
+  // Ajustar el mapa a todo el departamento
+  // ------------------------------------------------------------
+
+  const boundsDepto = capaCampoContorno.getBounds();
+
+  if (boundsDepto.isValid()) {
+    mapaCampoLeaflet.fitBounds(boundsDepto.pad(0.08));
   }
 }
-
+  
 function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, sistemaProductivo) {
   pintarMapaCampo(municipio);
 
