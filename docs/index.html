@@ -89,11 +89,11 @@
 
   .chart-panel { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 16px; overflow-x: auto; }
   .temp-toggle { display: flex; gap: 6px; margin-bottom: 10px; }
-  .temp-toggle-btn {
-    font-family: var(--font-body); font-size: 0.8rem; padding: 6px 12px; border-radius: 999px; cursor: pointer;
-    border: 1px solid var(--color-line); background: var(--color-bg); color: var(--color-ink-soft);
+  .temp-toggle-check {
+    display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); font-size: 0.85rem;
+    color: var(--color-ink-soft); cursor: pointer; user-select: none;
   }
-  .temp-toggle-btn.activa { background: var(--color-temp); border-color: var(--color-temp); color: white; font-weight: 600; }
+  .temp-toggle-check input { width: 16px; height: 16px; accent-color: var(--color-temp); cursor: pointer; }
   #chart { min-width: 320px; }
 
   .mapa-panel { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 16px; margin-top: 20px; }
@@ -101,6 +101,7 @@
   .mapa-header-texto { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; flex: 1; min-width: 200px; }
   .mapa-header h2 { font-family: var(--font-display); font-size: 1.15rem; font-weight: 600; margin: 0; }
   #mapa-leaflet { height: 460px; width: 100%; border-radius: var(--radius); overflow: hidden; }
+  #mapa-leaflet .leaflet-interactive:focus { outline: none; }
   .mapa-etiqueta-mun {
     font-family: var(--font-body); font-weight: 700; font-size: 12px; color: var(--color-ink);
     text-shadow: 0 0 3px var(--color-panel), 0 0 3px var(--color-panel), 0 0 3px var(--color-panel);
@@ -118,16 +119,6 @@
   .leyenda-nombre { font-weight: 700; font-size: 0.88rem; }
   .leyenda-rango { font-size: 0.78rem; color: var(--color-ink-soft); margin-left: auto; }
   .mapa-nota { font-size: 0.78rem; color: var(--color-ink-soft); margin-top: 12px; }
-
-  .selector-cultivo {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding: 10px 14px;
-    background: var(--color-panel); border: 1px solid var(--color-line); border-left: 3px solid var(--color-temp);
-    border-radius: var(--radius); font-size: 0.85rem; color: var(--color-ink-soft); flex-wrap: wrap;
-  }
-  .selector-cultivo select {
-    font-family: var(--font-body); font-size: 0.88rem; padding: 5px 8px;
-    border: 1px solid var(--color-line); border-radius: 4px; background: var(--color-bg); color: var(--color-ink); min-width: 140px;
-  }
 
   .tabs {
     display: inline-flex; gap: 4px; margin-bottom: 20px; padding: 4px;
@@ -176,14 +167,9 @@
     <div class="field"><label for="sel-variable">Variable</label><select id="sel-variable"></select></div>
   </div>
 
-  <div class="selector-cultivo" id="selector-cultivo" style="display:none;">
-    <label for="sel-sistema">Umbral según sistema productivo:</label>
-    <select id="sel-sistema"></select>
-  </div>
-
   <div class="tabs">
     <button type="button" class="tab-btn activa" data-vista="secundaria">Monitoreo satelital</button>
-    <button type="button" class="tab-btn" data-vista="campo">Monitoreo de campo</button>
+    <button type="button" class="tab-btn" data-vista="campo">Monitoreo comunitario</button>
   </div>
 
   <div id="vista-secundaria">
@@ -191,9 +177,10 @@
 
     <div class="chart-panel">
       <div class="temp-toggle" id="temp-toggle" style="display:none;">
-        <button type="button" data-modo="completo" class="temp-toggle-btn activa">Promedio + rango</button>
-        <button type="button" data-modo="min" class="temp-toggle-btn">Solo mínimas</button>
-        <button type="button" data-modo="max" class="temp-toggle-btn">Solo máximas</button>
+        <label class="temp-toggle-check">
+          <input type="checkbox" id="chk-promedio-temp">
+          Mostrar también la temperatura promedio
+        </label>
       </div>
       <div id="chart"></div>
     </div>
@@ -422,27 +409,8 @@ const MESES_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","n
    UMBRALES DE EJEMPLO — se editan aquí en el código, no desde la interfaz.
    Cámbialos cuando tengas los valores reales para cada municipio/variable.
    ------------------------------------------------------------------------ */
-/* ------------------------------------------------------------------------
-   SISTEMA PRODUCTIVO: los umbrales de "días de calor" / "días de humedad
-   alta" dependen del cultivo (no es lo mismo el estrés por calor en arroz
-   que en café). Los cultivos disponibles dependen del departamento —lista
-   tomada de las fichas departamentales del Ministerio de Agricultura—.
-   "Ganadería" no se desglosa, es una sola opción genérica.
-   Los umbrales de abajo son SIMULADOS por ahora — se reemplazan cuando
-   tengas el análisis agronómico real por cultivo.
-   ------------------------------------------------------------------------ */
-const CULTIVOS_POR_DEPARTAMENTO = {
-  Sucre: ["Arroz", "Maíz", "Ñame", "Yuca", "Ajonjolí", "Ganadería"],
-  Tolima: ["Arroz", "Café", "Maíz", "Soya", "Algodón", "Ganadería"],
-};
-const UMBRAL_TMAX_POR_CULTIVO = {
-  Arroz: 35, Maíz: 33, Ñame: 32, Yuca: 34, Ajonjolí: 33,
-  Café: 28, Soya: 32, Algodón: 36, Ganadería: 33,
-};
-const UMBRAL_HR_POR_CULTIVO = {
-  Arroz: 85, Maíz: 80, Ñame: 82, Yuca: 83, Ajonjolí: 78,
-  Café: 75, Soya: 80, Algodón: 78, Ganadería: 80,
-};
+const UMBRAL_TMAX = 33;  // °C — días de calor
+const UMBRAL_HR = 82;    // % — días de humedad alta
 
 // Umbrales de lluvia ACUMULADA, uno por cada duración de período — un
 // acumulado de "Fuerte" en un solo día es mucho menor que uno de "Fuerte"
@@ -526,26 +494,14 @@ function calcularIndicadores(vars, diasPeriodo, fechaObjetivo, umbralTmax, umbra
 const $municipio = document.getElementById("sel-municipio");
 const $periodo = document.getElementById("sel-periodo");
 const $variable = document.getElementById("sel-variable");
-const $sistema = document.getElementById("sel-sistema");
 const $cards = document.getElementById("cards");
 const $fuenteFecha = document.getElementById("fuente-fecha");
-
-function actualizarOpcionesSistema() {
-  const dept = MUNICIPIO_DEPARTAMENTO[$municipio.value];
-  const opciones = CULTIVOS_POR_DEPARTAMENTO[dept] || ["Ganadería"];
-  const actual = $sistema.value;
-  $sistema.innerHTML = "";
-  opciones.forEach((c) => $sistema.add(new Option(c, c)));
-  $sistema.value = opciones.includes(actual) ? actual : opciones[0];
-}
-$municipio.addEventListener("change", actualizarOpcionesSistema);
 
 MUNICIPIOS.forEach((m) => $municipio.add(new Option(m, m)));
 Object.keys(PERIODOS).forEach((p) => $periodo.add(new Option(p, p)));
 VARIABLES_VISTA.forEach((v) => $variable.add(new Option(ETIQUETA_CON_UNIDAD[v], v)));
 $periodo.value = "Última semana";
 $variable.value = "Lluvia";
-actualizarOpcionesSistema();
 
 // --- Manómetro ENSO: dial pequeño (SVG), sin librerías de gráficos ---
 // El valor (ONI aproximado) solo decide dónde apunta la aguja dentro de
@@ -614,10 +570,8 @@ function tarjeta(label, value, detail, accentVar, icono = "") {
   div.innerHTML = `<div class="label">${icono ? `<span class="card-icono">${icono}</span>` : ""}${label}</div><div class="value">${value}</div><div class="detail">${detail}</div>`;
   return div;
 }
-function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo, contenedor = $cards, sistemaProductivo = "Ganadería") {
-  const umbralTmax = UMBRAL_TMAX_POR_CULTIVO[sistemaProductivo] ?? UMBRAL_TMAX_POR_CULTIVO.Ganadería;
-  const umbralHr = UMBRAL_HR_POR_CULTIVO[sistemaProductivo] ?? UMBRAL_HR_POR_CULTIVO.Ganadería;
-  const ind = calcularIndicadores(vars, diasPeriodo, fechaObjetivo, umbralTmax, umbralHr);
+function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo, contenedor = $cards) {
+  const ind = calcularIndicadores(vars, diasPeriodo, fechaObjetivo, UMBRAL_TMAX, UMBRAL_HR);
   contenedor.innerHTML = "";
 
   if (variableElegida === "Lluvia") {
@@ -639,7 +593,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp", "🌡️"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      contenedor.append(tarjeta(`Temperaturas por encima de ${umbralTmax}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, `Umbral para ${sistemaProductivo}`, "--color-temp", "🔥"));
+      contenedor.append(tarjeta(`Temperaturas por encima de ${UMBRAL_TMAX}°C`, `${ind.dias_tmax_sobre_umbral} de ${ind.dias_tmax_total} día(s)`, "", "--color-temp", "🔥"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
@@ -648,7 +602,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
       contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum", "💧"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        contenedor.append(tarjeta(`Humedad por encima de ${umbralHr}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, `Umbral para ${sistemaProductivo}`, "--color-relhum", "💦"));
+        contenedor.append(tarjeta(`Humedad por encima de ${UMBRAL_HR}%`, `${ind.dias_hr_sobre_umbral} de ${ind.dias_hr_total} día(s)`, "", "--color-relhum", "💦"));
       }
     }
   }
@@ -656,7 +610,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
 
 function estiloEjeFecha() { return { tickformat: "%d-%b", tickfont: { size: 11 } }; }
 
-let modoTemperatura = "completo"; // "completo" | "min" | "max" — controla qué líneas se ven en el gráfico de temperatura
+let mostrarPromedioTemp = false; // controla si la línea de promedio se agrega al gráfico de máx/mín
 
 function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida, targetId = "chart") {
   const layoutBase = {
@@ -671,24 +625,18 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
     Plotly.newPlot(targetId, traces, { ...layoutBase, yaxis: { title: { text: "<b>mm/día</b>", font: { size: 15 } } }, title: { text: "<b>Lluvia diaria</b>", font: { size: 18 } } }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Temperatura") {
     const tavg = vars.tavg.slice(-diasPeriodo), tmin = vars.tmin.slice(-diasPeriodo), tmax = vars.tmax.slice(-diasPeriodo);
-    let traces, tituloTxt;
-    if (modoTemperatura === "min") {
-      traces = [{ x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines+markers", line: { color: "#2A6E85", width: 2.5 }, marker: { size: 6 }, name: "Temperatura mínima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" }];
-      tituloTxt = "Temperatura mínima diaria";
-    } else if (modoTemperatura === "max") {
-      traces = [{ x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines+markers", line: { color: "#B23A3A", width: 2.5 }, marker: { size: 6 }, name: "Temperatura máxima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" }];
-      tituloTxt = "Temperatura máxima diaria";
-    } else {
-      traces = [
-        { x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines", line: { width: 0 }, showlegend: false, hoverinfo: "skip" },
-        { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines", fill: "tonexty", fillcolor: "rgba(217,127,43,0.15)", line: { width: 0 }, name: "Rango mín–máx del día", hoverinfo: "skip" },
-        { x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5 }, marker: { size: 5 }, name: "Temperatura promedio", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
-      ];
-      tituloTxt = "Temperatura diaria";
+    // Máxima y mínima siempre van juntas en el mismo gráfico; el promedio es
+    // un interruptor aparte, para no saturar la vista por defecto.
+    const traces = [
+      { x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines+markers", line: { color: "#B23A3A", width: 2.5 }, marker: { size: 5 }, name: "Temperatura máxima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
+      { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines+markers", line: { color: "#2A6E85", width: 2.5 }, marker: { size: 5 }, name: "Temperatura mínima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
+    ];
+    if (mostrarPromedioTemp) {
+      traces.push({ x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5, dash: "dot" }, marker: { size: 5 }, name: "Temperatura promedio", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" });
     }
     Plotly.newPlot(targetId, traces, {
       ...layoutBase, yaxis: { title: { text: "<b>°C</b>", font: { size: 15 } } },
-      title: { text: `<b>${tituloTxt}</b>`, font: { size: 18 } },
+      title: { text: "<b>Temperatura diaria (máxima y mínima)</b>", font: { size: 18 } },
     }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Humedad relativa") {
     const serie = vars.relhum.slice(-diasPeriodo);
@@ -924,19 +872,19 @@ function construirVarsCampo(municipio, fechasVentana) {
   return { precip, tavg, tmin: [], tmax: tavg, relhum };
 }
 
-function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, sistemaProductivo) {
+function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
 
   const varsCampo = construirVarsCampo(municipio, fechasVentana);
   // diasPeriodo se pasa "de sobra" a propósito: los datos ya vienen
   // filtrados a la ventana de la semana, así que slice(-N) con N grande no
   // recorta nada — evita que se pierdan reportes si algún día faltó otro.
-  mostrarIndicadores(varsCampo, 999, etiqueta, variableElegida, null, $campoCards, sistemaProductivo);
+  mostrarIndicadores(varsCampo, 999, etiqueta, variableElegida, null, $campoCards);
 
   const hayDatos = varsCampo.precip.length || varsCampo.tavg.length || varsCampo.relhum.length;
   if (!hayDatos) {
     Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
     $campoVacio.style.display = "block";
-    $campoVacio.textContent = `Todavía no hay reportes de campo de ${municipio} para esta semana.`;
+    $campoVacio.textContent = `Todavía no hay reportes comunitarios de ${municipio} para esta semana.`;
     return;
   }
   $campoVacio.style.display = "none";
@@ -946,17 +894,13 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, s
 // --- Pestañas: alternar entre la vista de fuentes secundarias y la de campo ---
 const $headerDescripcion = document.getElementById("header-descripcion");
 const DESCRIPCION_POR_VISTA = {
-  secundaria: () => `Lluvia, temperatura y humedad relativa de los últimos días para ${listaMunicipios()}, calculadas a partir de datos satelitales (MSWX / MSWEP). Incluye mapa, gráficos por período y alertas de días por encima del umbral de calor o humedad según el sistema productivo.`,
-  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores reportan semana a semana desde su finca en ${listaMunicipios()}, para contrastar con la estimación satelital. Al ser reportes puntuales por finca, aquí no hay mapa ni promedio diario: se agrupan por semana (o el período más largo que elijas arriba).`,
+  secundaria: () => `Lluvia, temperatura y humedad relativa de los últimos días para ${listaMunicipios()}, calculadas a partir de datos satelitales (MSWX / MSWEP). Incluye mapa por variable, gráficos por período y alertas de días por encima del umbral de calor o humedad.`,
+  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios — un complemento directo de la fuente satelital.`,
 };
 
-document.querySelectorAll(".temp-toggle-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".temp-toggle-btn").forEach((b) => b.classList.remove("activa"));
-    btn.classList.add("activa");
-    modoTemperatura = btn.dataset.modo;
-    panel();
-  });
+document.getElementById("chk-promedio-temp").addEventListener("change", (e) => {
+  mostrarPromedioTemp = e.target.checked;
+  panel();
 });
 
 function actualizarOpcionesPeriodo(vista) {
@@ -1005,8 +949,6 @@ function panel() {
   const vars = datos.municipios[municipio];
 
   document.getElementById("temp-toggle").style.display = variableElegida === "Temperatura" ? "flex" : "none";
-  document.getElementById("selector-cultivo").style.display =
-    (variableElegida === "Temperatura" || variableElegida === "Humedad relativa") ? "flex" : "none";
   const ultimaFecha = vars.precip.slice(-1)[0].date;
 
   let fechaObjetivo = null;
@@ -1015,7 +957,7 @@ function panel() {
   }
 
   const etiqueta = etiquetaPeriodo(periodoNombre, diasPeriodo, ultimaFecha, fechaObjetivo);
-  mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo, $cards, $sistema.value);
+  mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaObjetivo, $cards);
   pintarMapa(etiqueta, diasPeriodo, fechaObjetivo);
 
   // El registro de campo usa el mismo período elegido arriba (última
@@ -1026,10 +968,10 @@ function panel() {
     $campoCards.innerHTML = "";
     Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
     $campoVacio.style.display = "block";
-    $campoVacio.textContent = "Elige \"Última semana\" o un período más largo arriba para ver los reportes de campo — un reporte puntual no se puede mirar día a día.";
+    $campoVacio.textContent = "Elige \"Última semana\" o un período más largo arriba para ver los reportes comunitarios — un reporte puntual no se puede mirar día a día.";
   } else {
     const fechasVentana = vars.precip.slice(-diasPeriodo).map((p) => p.date);
-    pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, $sistema.value);
+    pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta);
   }
 
   if (periodoNombre === "Última fecha") {
@@ -1044,7 +986,7 @@ async function iniciar() {
   $fuenteFecha.textContent = "Datos hasta " + fechaEs(datos.municipios[MUNICIPIOS[0]].precip.slice(-1)[0].date);
   $headerDescripcion.textContent = DESCRIPCION_POR_VISTA.secundaria();
   pintarEnso();
-  [$municipio, $periodo, $variable, $sistema].forEach((el) => el.addEventListener("change", panel));
+  [$municipio, $periodo, $variable].forEach((el) => el.addEventListener("change", panel));
   panel();
 }
 iniciar();
