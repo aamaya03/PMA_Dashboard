@@ -256,24 +256,28 @@ def centroide(gdf_proj, nombre):
 # Recorte raster (grilla espacial, solo para precipitación por ahora)
 # ---------------------------------------------------------------------------
 
-def construir_grid_precipitacion(archivos_precip, gdf, nombre):
-    ds = abrir_dataset(archivos_precip)
+def construir_grid_variable(archivos, gdf, nombre, var_candidates):
+    """Recorta el ráster completo (de cualquier variable) al polígono del
+    municipio y devuelve una celda por pixel, cada una con su propia serie
+    de tiempo. Generaliza lo que antes solo hacía construir_grid_precipitacion,
+    para poder usarlo también con temperatura y humedad relativa."""
+    ds = abrir_dataset(archivos)
     ds = ds.rio.write_crs("EPSG:4326")
     if "lat" in ds.dims and "lon" in ds.dims:
         ds = ds.rio.set_spatial_dims(x_dim="lon", y_dim="lat")
 
     geometria = gdf.loc[nombre, "geometry"]
     recorte = ds.rio.clip([geometria], all_touched=True, drop=True)
-    var_real = nombre_variable_real(recorte, VARIABLES["precip"]["var_candidates"])
+    var_real = nombre_variable_real(recorte, var_candidates)
 
-    df = recorte[var_real].to_dataframe(name="precip").reset_index().dropna(subset=["precip"])
+    df = recorte[var_real].to_dataframe(name="valor").reset_index().dropna(subset=["valor"])
     celdas = []
     for (lat, lon), grupo in df.groupby(["lat", "lon"]):
         grupo = grupo.sort_values("time")
         celdas.append({
             "lat": round(float(lat), 4),
             "lon": round(float(lon), 4),
-            "valores": [round(float(v), 1) for v in grupo["precip"].tolist()],
+            "valores": [round(float(v), 1) for v in grupo["valor"].tolist()],
         })
     return celdas
 
@@ -363,10 +367,16 @@ def main():
 
         municipios_json[nombre] = {
             **series,
-            "grid": construir_grid_precipitacion(archivos_por_variable["precip"], gdf, nombre)
+            "grid": construir_grid_variable(archivos_por_variable["precip"], gdf, nombre, VARIABLES["precip"]["var_candidates"])
                     if archivos_por_variable.get("precip") else [],
+            "grid_tavg": construir_grid_variable(archivos_por_variable["tavg"], gdf, nombre, VARIABLES["tavg"]["var_candidates"])
+                    if archivos_por_variable.get("tavg") else [],
+            "grid_relhum": construir_grid_variable(archivos_por_variable["relhum"], gdf, nombre, VARIABLES["relhum"]["var_candidates"])
+                    if archivos_por_variable.get("relhum") else [],
         }
-        print(f"{nombre}: grilla con {len(municipios_json[nombre]['grid'])} celdas")
+        print(f"{nombre}: grilla lluvia {len(municipios_json[nombre]['grid'])} celdas · "
+              f"temperatura {len(municipios_json[nombre]['grid_tavg'])} celdas · "
+              f"humedad {len(municipios_json[nombre]['grid_relhum'])} celdas")
 
     print("Leyendo reportes de campo...")
     try:
@@ -395,4 +405,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
