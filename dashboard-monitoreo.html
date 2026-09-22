@@ -89,7 +89,7 @@
   .card .detail { font-size: 0.78rem; color: var(--color-ink-soft); margin-top: 4px; }
 
   .chart-panel { background: var(--color-panel); border: 1px solid var(--color-line); border-radius: var(--radius); padding: 16px; overflow-x: auto; }
-  .temp-toggle { display: flex; gap: 6px; margin-bottom: 10px; }
+  .temp-toggle { display: flex; gap: 14px; margin-bottom: 10px; flex-wrap: wrap; }
   .temp-toggle-check {
     display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); font-size: 0.85rem;
     color: var(--color-ink-soft); cursor: pointer; user-select: none;
@@ -195,10 +195,9 @@
 
     <div class="chart-panel">
       <div class="temp-toggle" id="temp-toggle" style="display:none;">
-        <label class="temp-toggle-check">
-          <input type="checkbox" id="chk-promedio-temp">
-          Mostrar también la temperatura promedio
-        </label>
+        <label class="temp-toggle-check"><input type="checkbox" id="chk-max-temp" checked> Máxima</label>
+        <label class="temp-toggle-check"><input type="checkbox" id="chk-min-temp" checked> Mínima</label>
+        <label class="temp-toggle-check"><input type="checkbox" id="chk-promedio-temp"> Promedio</label>
       </div>
       <div id="chart"></div>
     </div>
@@ -220,10 +219,9 @@
     <div class="cards" id="campo-cards"></div>
     <div class="chart-panel">
       <div class="temp-toggle" id="campo-temp-toggle" style="display:none;">
-        <label class="temp-toggle-check">
-          <input type="checkbox" id="chk-promedio-temp-campo">
-          Mostrar también la temperatura promedio
-        </label>
+        <label class="temp-toggle-check"><input type="checkbox" id="chk-max-temp-campo" checked> Máxima</label>
+        <label class="temp-toggle-check"><input type="checkbox" id="chk-min-temp-campo" checked> Mínima</label>
+        <label class="temp-toggle-check"><input type="checkbox" id="chk-promedio-temp-campo"> Promedio</label>
       </div>
       <div id="campo-chart"></div>
       <div class="campo-vacio" id="campo-vacio" style="display:none;"></div>
@@ -644,8 +642,8 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       contenedor.append(tarjeta(`Lluvia — ${etiqueta}`, "No disponible", "El dato de este día aún no se ha publicado", "--color-rain", "🌧️"));
     } else if (ind.precip_dias_periodo !== undefined) {
       const diasSinLluvia = ind.precip_dias_periodo - ind.precip_dias_con_lluvia;
-      contenedor.append(tarjeta(`Días con lluvia — ${etiqueta}`, dias(ind.precip_dias_con_lluvia), "", "--color-rain", "🌧️"));
-      contenedor.append(tarjeta(`Días secos — ${etiqueta}`, dias(diasSinLluvia), "", "--color-rain", "☀️"));
+      contenedor.append(tarjeta(`Días con lluvia — ${etiqueta}`, `${dias(ind.precip_dias_con_lluvia)} con lluvia`, "", "--color-rain", "🌧️"));
+      contenedor.append(tarjeta(`Días secos — ${etiqueta}`, `${dias(diasSinLluvia)} secos`, "", "--color-rain", "☀️"));
       contenedor.append(tarjeta(`Lluvia total — ${etiqueta}`, `${ind.precip_total.toFixed(1)} mm`, "", "--color-rain", "🌧️"));
     }
   } else if (variableElegida === "Temperatura") {
@@ -658,7 +656,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       contenedor.append(tarjeta(`Temperatura — ${etiqueta}`, `${ind.temp_promedio.toFixed(1)} °C promedio`, detalle, "--color-temp", "🌡️"));
     }
     if (ind.dias_tmax_sobre_umbral !== undefined) {
-      contenedor.append(tarjeta(`Temperaturas por encima de ${umbralTmax}°C`, `${ind.dias_tmax_sobre_umbral} de ${dias(ind.dias_tmax_total)}`, `Umbral para ${sistemaProductivo}`, "--color-temp", "🔥"));
+      contenedor.append(tarjeta(`Temperaturas por encima de ${umbralTmax}°C`, `${ind.dias_tmax_sobre_umbral} de ${dias(ind.dias_tmax_total)}`, `Superaron el umbral para ${sistemaProductivo}`, "--color-temp", "🔥"));
     }
   } else if (variableElegida === "Humedad relativa") {
     if (ind.relhum_no_disponible) {
@@ -667,7 +665,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
       const detalle = `Máx: ${ind.relhum_max.value.toFixed(0)}% (${fechaEs(ind.relhum_max.date)})  Mín: ${ind.relhum_min.value.toFixed(0)}% (${fechaEs(ind.relhum_min.date)})`;
       contenedor.append(tarjeta(`Humedad relativa — ${etiqueta}`, `${ind.relhum_promedio.toFixed(0)} % promedio`, detalle, "--color-relhum", "💧"));
       if (ind.dias_hr_sobre_umbral !== undefined) {
-        contenedor.append(tarjeta(`Humedad por encima de ${umbralHr}%`, `${ind.dias_hr_sobre_umbral} de ${dias(ind.dias_hr_total)}`, `Umbral para ${sistemaProductivo}`, "--color-relhum", "💦"));
+        contenedor.append(tarjeta(`Humedad por encima de ${umbralHr}%`, `${ind.dias_hr_sobre_umbral} de ${dias(ind.dias_hr_total)}`, `Superaron el umbral para ${sistemaProductivo}`, "--color-relhum", "💦"));
       }
     }
   }
@@ -675,7 +673,7 @@ function mostrarIndicadores(vars, diasPeriodo, etiqueta, variableElegida, fechaO
 
 function estiloEjeFecha() { return { tickformat: "%d-%b", tickfont: { size: 11 } }; }
 
-let mostrarPromedioTemp = false; // controla si la línea de promedio se agrega al gráfico de máx/mín
+let mostrarMaxTemp = true, mostrarMinTemp = true, mostrarPromedioTemp = false; // qué líneas se ven en el gráfico de temperatura
 
 function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida, targetId = "chart") {
   const layoutBase = {
@@ -690,18 +688,26 @@ function graficarPeriodo(vars, diasPeriodo, etiqueta, municipio, variableElegida
     Plotly.newPlot(targetId, traces, { ...layoutBase, yaxis: { title: { text: "<b>mm/día</b>", font: { size: 15 } } }, title: { text: "<b>Lluvia diaria</b>", font: { size: 18 } } }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Temperatura") {
     const tavg = vars.tavg.slice(-diasPeriodo), tmin = vars.tmin.slice(-diasPeriodo), tmax = vars.tmax.slice(-diasPeriodo);
-    // Máxima y mínima siempre van juntas en el mismo gráfico; el promedio es
-    // un interruptor aparte, para no saturar la vista por defecto.
-    const traces = [
-      { x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines+markers", line: { color: "#B23A3A", width: 2.5 }, marker: { size: 5 }, name: "Temperatura máxima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
-      { x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines+markers", line: { color: "#2A6E85", width: 2.5 }, marker: { size: 5 }, name: "Temperatura mínima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" },
-    ];
+    // Cada línea (máxima/mínima/promedio) se activa o apaga por separado con
+    // su propia casilla — puedes ver cualquier combinación, incluida una sola.
+    const traces = [];
+    if (mostrarMaxTemp) {
+      traces.push({ x: tmax.map((p) => p.date), y: tmax.map((p) => p.value), mode: "lines+markers", line: { color: "#B23A3A", width: 2.5 }, marker: { size: 5 }, name: "Temperatura máxima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" });
+    }
+    if (mostrarMinTemp) {
+      traces.push({ x: tmin.map((p) => p.date), y: tmin.map((p) => p.value), mode: "lines+markers", line: { color: "#2A6E85", width: 2.5 }, marker: { size: 5 }, name: "Temperatura mínima", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" });
+    }
     if (mostrarPromedioTemp) {
       traces.push({ x: tavg.map((p) => p.date), y: tavg.map((p) => p.value), mode: "lines+markers", line: { color: "#D97F2B", width: 2.5, dash: "dot" }, marker: { size: 5 }, name: "Temperatura promedio", hovertemplate: "%{x}<br>%{y:.1f} °C<extra></extra>" });
     }
+    if (!traces.length) {
+      Plotly.purge(targetId); document.getElementById(targetId).innerHTML =
+        '<p style="color:var(--color-ink-soft); font-size:0.9rem; padding:20px 0; text-align:center;">Activa al menos una línea (máxima, mínima o promedio) para ver la gráfica.</p>';
+      return;
+    }
     Plotly.newPlot(targetId, traces, {
       ...layoutBase, yaxis: { title: { text: "<b>°C</b>", font: { size: 15 } } },
-      title: { text: "<b>Temperatura diaria (máxima y mínima)</b>", font: { size: 18 } },
+      title: { text: "<b>Temperatura diaria</b>", font: { size: 18 } },
     }, { displayModeBar: false, responsive: true });
   } else if (variableElegida === "Humedad relativa") {
     const serie = vars.relhum.slice(-diasPeriodo);
@@ -1135,16 +1141,24 @@ const DESCRIPCION_POR_VISTA = {
   campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios.`,
 };
 
-const $chkPromedioTemp = document.getElementById("chk-promedio-temp");
-const $chkPromedioTempCampo = document.getElementById("chk-promedio-temp-campo");
-[$chkPromedioTemp, $chkPromedioTempCampo].forEach((chk) => {
-  chk.addEventListener("change", (e) => {
-    mostrarPromedioTemp = e.target.checked;
-    $chkPromedioTemp.checked = mostrarPromedioTemp; // mantiene sincronizados los dos interruptores
-    $chkPromedioTempCampo.checked = mostrarPromedioTemp;
-    panel();
+// Cada casilla (máxima/mínima/promedio) existe por duplicado, una en cada
+// pestaña — se mantienen sincronizadas entre sí para que no haya que volver
+// a marcarlas al cambiar de "Monitoreo satelital" a "Monitoreo comunitario".
+function conectarInterruptorTemp(idPrincipal, idCampo, variableSetter) {
+  const principal = document.getElementById(idPrincipal);
+  const campo = document.getElementById(idCampo);
+  [principal, campo].forEach((chk) => {
+    chk.addEventListener("change", (e) => {
+      variableSetter(e.target.checked);
+      principal.checked = e.target.checked;
+      campo.checked = e.target.checked;
+      panel();
+    });
   });
-});
+}
+conectarInterruptorTemp("chk-max-temp", "chk-max-temp-campo", (v) => { mostrarMaxTemp = v; });
+conectarInterruptorTemp("chk-min-temp", "chk-min-temp-campo", (v) => { mostrarMinTemp = v; });
+conectarInterruptorTemp("chk-promedio-temp", "chk-promedio-temp-campo", (v) => { mostrarPromedioTemp = v; });
 
 function actualizarOpcionesPeriodo(vista) {
   const soloSecundaria = ["Última fecha"];
@@ -1286,4 +1300,5 @@ iniciar();
 </script>
 </body>
 </html>
+
 
