@@ -169,7 +169,7 @@
 
   <div class="tabs">
     <button type="button" class="tab-btn activa" data-vista="secundaria">Monitoreo satelital</button>
-    <button type="button" class="tab-btn" data-vista="campo">Monitoreo de campo</button>
+    <button type="button" class="tab-btn" data-vista="campo">Monitoreo comunitario</button>
   </div>
 
   <div id="vista-secundaria">
@@ -884,7 +884,7 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
   if (!hayDatos) {
     Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
     $campoVacio.style.display = "block";
-    $campoVacio.textContent = `Todavía no hay reportes de campo de ${municipio} para esta semana.`;
+    $campoVacio.textContent = `Todavía no hay reportes comunitarios de ${municipio} para esta semana.`;
     return;
   }
   $campoVacio.style.display = "none";
@@ -895,7 +895,7 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta) {
 const $headerDescripcion = document.getElementById("header-descripcion");
 const DESCRIPCION_POR_VISTA = {
   secundaria: () => `Lluvia, temperatura y humedad relativa de los últimos días para ${listaMunicipios()}, calculadas a partir de datos satelitales (MSWX / MSWEP). Incluye mapa por variable, gráficos por período y alertas de días por encima del umbral de calor o humedad.`,
-  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes de campo — un complemento directo de la fuente satelital.`,
+  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios — un complemento directo de la fuente satelital.`,
 };
 
 document.getElementById("chk-promedio-temp").addEventListener("change", (e) => {
@@ -968,7 +968,7 @@ function panel() {
     $campoCards.innerHTML = "";
     Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
     $campoVacio.style.display = "block";
-    $campoVacio.textContent = "Elige \"Última semana\" o un período más largo arriba para ver los reportes de campo — un reporte puntual no se puede mirar día a día.";
+    $campoVacio.textContent = "Elige \"Última semana\" o un período más largo arriba para ver los reportes comunitarios — un reporte puntual no se puede mirar día a día.";
   } else {
     const fechasVentana = vars.precip.slice(-diasPeriodo).map((p) => p.date);
     pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta);
