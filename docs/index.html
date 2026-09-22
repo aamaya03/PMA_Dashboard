@@ -934,15 +934,32 @@ const $campoVacio = document.getElementById("campo-vacio");
 // ser útil. Tampoco hay mapa aquí: cada reporte es un solo punto (la finca
 // del productor), no hay variación espacial que mostrar como en el satélite.
 function construirVarsCampo(municipio, fechasVentana) {
-  const obs = (datos.observaciones || []).filter((o) => o.municipio === municipio && fechasVentana.includes(o.fecha));
+  const obs = (datos.observaciones || []).filter(
+    (o) => o.municipio === municipio && fechasVentana.includes(o.fecha)
+  );
+
   const porVariable = (clave) => obs
     .filter((o) => o.variable === clave)
-    .map((o) => ({ date: o.fecha, value: o.valor, reportante: o.reportante, comentario: o.comentario }))
+    .map((o) => ({
+      date: o.fecha,
+      value: o.valor,
+      reportante: o.reportante,
+      comentario: o.comentario
+    }))
     .sort((a, b) => (a.date < b.date ? -1 : 1));
+
   const precip = porVariable("precip");
-  const tavg = porVariable("tavg");
+  const tmax = porVariable("tmax");
+  const tmin = porVariable("tmin");
   const relhum = porVariable("relhum");
-  return { precip, tavg, tmin: [], tmax: tavg, relhum };
+
+  return {
+    precip,
+    tavg: [],
+    tmin,
+    tmax,
+    relhum
+  };
 }
 
 /* ------------------------------------------------------------------------
@@ -1011,7 +1028,11 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, s
   // recorta nada — evita que se pierdan reportes si algún día faltó otro.
   mostrarIndicadores(varsCampo, 999, etiqueta, variableElegida, null, $campoCards, sistemaProductivo);
 
-  const hayDatos = varsCampo.precip.length || varsCampo.tavg.length || varsCampo.relhum.length;
+  const hayDatos =
+  varsCampo.precip.length ||
+  varsCampo.tmax.length ||
+  varsCampo.tmin.length ||
+  varsCampo.relhum.length;
   if (!hayDatos) {
     Plotly.purge("campo-chart"); $campoChart.innerHTML = "";
     $campoVacio.style.display = "block";
@@ -1026,7 +1047,7 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, s
 const $headerDescripcion = document.getElementById("header-descripcion");
 const DESCRIPCION_POR_VISTA = {
   secundaria: () => `Lluvia, temperatura y humedad relativa de los últimos días para ${listaMunicipios()}, calculadas a partir de datos satelitales (MSWX / MSWEP). Incluye mapa por variable, gráficos por período y alertas de días por encima del umbral de calor o humedad.`,
-  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios — un complemento directo de la fuente satelital.`,
+  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores registraron semana a semana en ${listaMunicipios()}, a partir de sus reportes comunitarios.`,
 };
 
 document.getElementById("chk-promedio-temp").addEventListener("change", (e) => {
@@ -1141,4 +1162,3 @@ iniciar();
 </script>
 </body>
 </html>
-
