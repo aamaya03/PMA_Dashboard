@@ -1142,8 +1142,40 @@ function panel() {
       $campoVacio.style.display = "block";
       $campoVacio.textContent = "Elige \"Última semana\" o un período más largo arriba para ver los reportes comunitarios — un reporte puntual no se puede mirar día a día.";
     } else {
-      const fechasVentana = vars.precip.slice(-diasPeriodo).map((p) => p.date);
-      pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, $sistema.value);
+      const observacionesMunicipio = (datos.observaciones || [])
+  .filter((o) => o.municipio === municipio && o.fecha);
+
+const fechasCampo = observacionesMunicipio
+  .map((o) => o.fecha)
+  .sort();
+
+if (!fechasCampo.length) {
+  $campoCards.innerHTML = "";
+  Plotly.purge("campo-chart");
+  $campoChart.innerHTML = "";
+  $campoVacio.style.display = "block";
+  $campoVacio.textContent =
+    `Todavía no hay reportes comunitarios de ${municipio}.`;
+} else {
+  const ultimaFechaCampo = fechasCampo[fechasCampo.length - 1];
+
+  const fechaFin = new Date(ultimaFechaCampo + "T00:00:00");
+  const fechaInicio = new Date(fechaFin);
+  fechaInicio.setDate(fechaInicio.getDate() - (diasPeriodo - 1));
+
+  const fechasVentanaCampo = fechasCampo.filter((f) => {
+    const d = new Date(f + "T00:00:00");
+    return d >= fechaInicio && d <= fechaFin;
+  });
+
+  pintarVistaCampo(
+    municipio,
+    variableElegida,
+    fechasVentanaCampo,
+    etiqueta,
+    $sistema.value
+  );
+}
     }
   } catch (e) {
     console.error("No se pudo dibujar el módulo de monitoreo comunitario:", e);
