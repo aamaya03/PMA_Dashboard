@@ -4,7 +4,7 @@ pipeline_extraccion.py
 Versión del notebook lista para correr fuera de Colab (en un GitHub Action).
 Reemplaza drive.mount() por autenticación con una cuenta de servicio de
 Google, usando la API de Drive para navegar la carpeta por nombre y
-descargar solo los archivos .nc de la ventana de días necesaria.
+descargar solo los archivos .nc de la ventana de días necesaria
 
 Variables de entorno esperadas:
   GCP_SERVICE_ACCOUNT_KEY   contenido completo del JSON de la cuenta de servicio
