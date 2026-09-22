@@ -191,9 +191,9 @@
 
     <div class="chart-panel">
       <div class="temp-toggle" id="temp-toggle" style="display:none;">
-        <button type="button" data-modo="completo" class="temp-toggle-btn activa">Promedio + rango</button>
-        <button type="button" data-modo="min" class="temp-toggle-btn">Solo mínimas</button>
-        <button type="button" data-modo="max" class="temp-toggle-btn">Solo máximas</button>
+        <button type="button" data-modo="completo" class="temp-toggle-btn activa">Temperatura promedio + rango</button>
+        <button type="button" data-modo="min" class="temp-toggle-btn">Solo temperaturas mínimas</button>
+        <button type="button" data-modo="max" class="temp-toggle-btn">Solo temperaturas máximas</button>
       </div>
       <div id="chart"></div>
     </div>
@@ -947,7 +947,7 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, s
 const $headerDescripcion = document.getElementById("header-descripcion");
 const DESCRIPCION_POR_VISTA = {
   secundaria: () => `Lluvia, temperatura y humedad relativa de los últimos días para ${listaMunicipios()}, calculadas a partir de datos satelitales (MSWX / MSWEP). Incluye mapa, gráficos por período y alertas de días por encima del umbral de calor o humedad según el sistema productivo.`,
-  campo: () => `Lluvia, temperatura y humedad relativa que los propios productores reportan semana a semana desde su finca en ${listaMunicipios()}, para contrastar con la estimación satelital. Al ser reportes puntuales por finca, aquí no hay mapa ni promedio diario: se agrupan por semana (o el período más largo que elijas arriba).`,
+  campo: () => `Lluvia, temperatura y humedad relativa reportada según lo observado en campo en ${listaMunicipios()},
 };
 
 document.querySelectorAll(".temp-toggle-btn").forEach((btn) => {
