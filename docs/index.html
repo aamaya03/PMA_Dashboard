@@ -746,6 +746,42 @@ const $btnMapaZoom = document.getElementById("btn-mapa-zoom");
 let mapaZoomMunicipio = true; // por defecto, acercado al municipio seleccionado
 $btnMapaZoom.addEventListener("click", () => { mapaZoomMunicipio = !mapaZoomMunicipio; panel(); });
 
+/* ------------------------------------------------------------------------
+   COLORES Y CATEGORÍAS DEL MAPA — faltaban en el código original: mapean
+   la variable elegida en el selector ("Lluvia"/"Temperatura"/"Humedad
+   relativa") a la clave interna de los datos (precip/tavg/relhum), definen
+   los cortes que separan cada franja de color, y arman la franja + color
+   para un valor agregado dado. Los cortes de lluvia reutilizan
+   UMBRALES_LLUVIA_POR_DIAS (ya definidos arriba); los de temperatura y
+   humedad son de ejemplo — ajústalos cuando tengas valores reales por zona.
+   ------------------------------------------------------------------------ */
+const CLAVE_MAPA_VARIABLE = { "Lluvia": "precip", "Temperatura": "tavg", "Humedad relativa": "relhum" };
+const ETIQUETA_VARIABLE = { precip: "Lluvia", tavg: "Temperatura", relhum: "Humedad relativa" };
+const UNIDAD_VARIABLE = { precip: "mm", tavg: "°C", relhum: "%" };
+
+const CATEGORIAS_MAPA = {
+  precip: { etiquetas: ["Seco", "Moderada", "Fuerte", "Muy fuerte"], colores: ["#DCE9F4", "#8FC1E0", "#3E7CA6", "#1D5A8C"] },
+  tavg:   { etiquetas: ["Fresco", "Templado", "Cálido", "Muy caliente"], colores: ["#FBE3C4", "#F0B673", "#D97F2B", "#B2591A"] },
+  relhum: { etiquetas: ["Bajo", "Moderado", "Alto", "Muy alto"], colores: ["#DDF1F7", "#A9DCEA", "#4FA8C9", "#2A6E85"] },
+};
+const CORTES_TAVG = [24, 27, 30];     // °C — promedio del período
+const CORTES_RELHUM = [65, 75, 85];   // % — promedio del período
+
+function cortesVariable(varKey, diasPeriodo) {
+  if (varKey === "precip") {
+    const u = UMBRALES_LLUVIA_POR_DIAS[diasPeriodo] || UMBRALES_LLUVIA_POR_DIAS[7];
+    return [u.seco, u.moderada, u.fuerte];
+  }
+  return varKey === "tavg" ? CORTES_TAVG : CORTES_RELHUM;
+}
+
+function categoriaVariable(valor, varKey, diasPeriodo) {
+  const cat = CATEGORIAS_MAPA[varKey];
+  const [c0, c1, c2] = cortesVariable(varKey, diasPeriodo);
+  const i = valor >= c2 ? 3 : valor >= c1 ? 2 : valor >= c0 ? 1 : 0;
+  return { color: cat.colores[i], etiqueta: cat.etiquetas[i] };
+}
+
 function pintarLeyendaMapa(varKey, diasPeriodo) {
   const cat = CATEGORIAS_MAPA[varKey];
   const unidad = UNIDAD_VARIABLE[varKey];
