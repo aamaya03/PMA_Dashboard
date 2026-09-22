@@ -947,7 +947,7 @@ function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, s
 const $headerDescripcion = document.getElementById("header-descripcion");
 const DESCRIPCION_POR_VISTA = {
   secundaria: () => `Lluvia, temperatura y humedad relativa de los últimos días para ${listaMunicipios()}, calculadas a partir de datos satelitales (MSWX / MSWEP). Incluye mapa, gráficos por período y alertas de días por encima del umbral de calor o humedad según el sistema productivo.`,
-  campo: () => `Lluvia, temperatura y humedad relativa reportada según lo observado en campo en ${listaMunicipios()},
+  campo: () => `Lluvia, temperatura y humedad relativa reportada según lo observado en campo en ${listaMunicipios()}`,
 };
 
 document.querySelectorAll(".temp-toggle-btn").forEach((btn) => {
