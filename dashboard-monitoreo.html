@@ -994,28 +994,89 @@ let capaCampoMarcador = null;
 
 function pintarMapaCampo(municipio) {
   const dept = MUNICIPIO_DEPARTAMENTO[municipio];
-  const feat = DEPARTAMENTOS_GEO[dept].features.find((f) => f.properties.target === municipio);
+  const feat = DEPARTAMENTOS_GEO[dept].features.find(
+    (f) => f.properties.target === municipio
+  );
+
+  if (!feat || !feat.geometry) {
+    console.warn("No hay geometría válida para el municipio:", municipio);
+    return;
+  }
 
   if (!mapaCampoLeaflet) {
-    mapaCampoLeaflet = L.map("campo-mapa-leaflet", { attributionControl: true, zoomControl: true });
-    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
-      maxZoom: 18,
-      attribution: "Imágenes: Esri, Maxar, Earthstar Geographics",
-    }).addTo(mapaCampoLeaflet);
+    mapaCampoLeaflet = L.map("campo-mapa-leaflet", {
+      attributionControl: true,
+      zoomControl: true
+    });
+
+    L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        maxZoom: 18,
+        attribution: "Imágenes: Esri, Maxar, Earthstar Geographics"
+      }
+    ).addTo(mapaCampoLeaflet);
   }
+
   mapaCampoLeaflet.invalidateSize();
 
-  if (capaCampoContorno) mapaCampoLeaflet.removeLayer(capaCampoContorno);
-  if (capaCampoMarcador) mapaCampoLeaflet.removeLayer(capaCampoMarcador);
+  // Eliminar las capas anteriores de forma segura
+  if (capaCampoContorno) {
+    try {
+      if (mapaCampoLeaflet.hasLayer(capaCampoContorno)) {
+        mapaCampoLeaflet.removeLayer(capaCampoContorno);
+      }
+    } catch (e) {
+      console.warn("No se pudo eliminar el contorno anterior:", e);
+    }
+    capaCampoContorno = null;
+  }
 
-  capaCampoContorno = L.geoJSON(feat, { style: { color: "#B23A3A", weight: 3, fill: false } }).addTo(mapaCampoLeaflet);
+  if (capaCampoMarcador) {
+    try {
+      if (mapaCampoLeaflet.hasLayer(capaCampoMarcador)) {
+        mapaCampoLeaflet.removeLayer(capaCampoMarcador);
+      }
+    } catch (e) {
+      console.warn("No se pudo eliminar el marcador anterior:", e);
+    }
+    capaCampoMarcador = null;
+  }
 
+  // Crear nuevo contorno
+  try {
+    capaCampoContorno = L.geoJSON(feat, {
+      style: {
+        color: "#B23A3A",
+        weight: 3,
+        fill: false
+      }
+    }).addTo(mapaCampoLeaflet);
+  } catch (e) {
+    console.error("Error dibujando geometría del municipio:", municipio, feat, e);
+    capaCampoContorno = null;
+    return;
+  }
+
+  // Crear marcador
   const [lat, lon] = obtenerPuntoFinca(municipio);
-  capaCampoMarcador = L.circleMarker([lat, lon], {
-    radius: 8, color: "white", weight: 2, fillColor: "#B23A3A", fillOpacity: 1,
-  }).bindTooltip(`Finca en ${municipio} (ubicación de ejemplo)`).addTo(mapaCampoLeaflet);
 
-  mapaCampoLeaflet.fitBounds(capaCampoContorno.getBounds().pad(0.15));
+  capaCampoMarcador = L.circleMarker([lat, lon], {
+    radius: 8,
+    color: "white",
+    weight: 2,
+    fillColor: "#B23A3A",
+    fillOpacity: 1
+  })
+    .bindTooltip(`Finca en ${municipio} (ubicación de ejemplo)`)
+    .addTo(mapaCampoLeaflet);
+
+  // Ajustar mapa al contorno
+  const bounds = capaCampoContorno.getBounds();
+
+  if (bounds.isValid()) {
+    mapaCampoLeaflet.fitBounds(bounds.pad(0.15));
+  }
 }
 
 function pintarVistaCampo(municipio, variableElegida, fechasVentana, etiqueta, sistemaProductivo) {
