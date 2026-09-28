@@ -45,6 +45,9 @@ MUNICIPIOS = {
     "San José de Toluviejo (Sucre)": {"name_2": "Toluviejo",   "name_1": "Sucre"},
     "Icononzo (Tolima)":             {"name_2": "Icononzo",    "name_1": "Tolima"},
     "Planadas (Tolima)":             {"name_2": "Planadas",    "name_1": "Tolima"},
+    "Fonseca (La Guajira)":          {"name_2": "Fonseca",     "name_1": "LaGuajira"},
+    "Manaure (Cesar)":               {"name_2": "Manaure",     "name_1": "Cesar"},
+    "El Paso (Cesar)":               {"name_2": "ElPaso",      "name_1": "Cesar"},
 }
 
 VARIABLES = {
@@ -229,7 +232,7 @@ def extraer_serie_punto(archivos, var_candidatos, lat, lon):
 
 
 # ---------------------------------------------------------------------------
-# Geometrías de los 4 municipios (archivo estático del repo, no cambia
+# Geometrías de los municipios monitoreados (archivo estático del repo, no cambia
 # entre corridas — no hace falta bajarlo de Drive cada vez)
 # ---------------------------------------------------------------------------
 
