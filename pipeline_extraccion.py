@@ -1,13 +1,6 @@
 """
 pipeline_extraccion.py
 
-Versión del notebook lista para correr fuera de Colab (en un GitHub Action).
-Reemplaza drive.mount() por autenticación con una cuenta de servicio de
-Google, usando la API de Drive para navegar la carpeta por nombre y
-descargar solo los archivos .nc de la ventana de días necesaria
-
-Variables de entorno esperadas:
-  GCP_SERVICE_ACCOUNT_KEY   contenido completo del JSON de la cuenta de servicio
 """
 
 import os
@@ -23,18 +16,15 @@ from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2.service_account import Credentials
 import gspread
 
-# ---------------------------------------------------------------------------
-# Configuración (ajusta esto a tu caso si algo no calza)
-# ---------------------------------------------------------------------------
+# ---------------
+# Configuración
+# ---------------
 
-# Ruta de carpetas dentro de Drive, tal como la ves en la interfaz web,
-# empezando por la carpeta compartida por GloH2O. Antes era
-# "/content/drive/MyDrive/PMA_CIAT/..."; aquí son los mismos nombres de
-# carpeta, solo que navegados por la API en vez de por sistema de archivos.
-RUTA_BASE = ["PMA_CIAT"]  # ajusta si el nombre real de la carpeta es otro
+# Ruta de carpetas dentro de Drive
+RUTA_BASE = ["PMA_CIAT"]  
 CARPETA_MSWEP = RUTA_BASE + ["MSWEP_V280"]
 CARPETA_MSWX = RUTA_BASE + ["MSWX_V100"]
-CARPETA_GEOJSON = RUTA_BASE  # se asume que gadm41_COL_2.json vive junto a las otras dos
+CARPETA_GEOJSON = RUTA_BASE  
 
 DIAS_DESCARGA = 30
 LOCAL_CACHE = "cache_nc"
@@ -87,11 +77,6 @@ def resolver_destino_si_es_atajo(servicio, archivo):
 
 
 def buscar_id_por_ruta(servicio, partes_ruta, id_padre="root"):
-    """Camina la ruta de carpetas por nombre (como en el Explorador de Drive),
-    siguiendo accesos directos (shortcuts) cuando los encuentra, y devuelve
-    el id de la última carpeta. El primer nivel se busca sin restringir por
-    carpeta padre, porque una carpeta compartida directamente con la cuenta
-    de servicio no cuelga de su propio 'root'."""
     actual = id_padre
     for nombre in partes_ruta:
         if actual == "root":
@@ -122,10 +107,6 @@ def buscar_id_por_ruta(servicio, partes_ruta, id_padre="root"):
 
 
 def listar_archivos_en_carpeta(servicio, carpeta_id):
-    """Devuelve {nombre_archivo: file_id_real} de una carpeta (una sola
-    página; si tienes miles de archivos por carpeta, hay que paginar con
-    pageToken). Si algún archivo es en realidad un acceso directo, sigue
-    el enlace y guarda el id del archivo real, no el del acceso directo."""
     archivos = {}
     page_token = None
     while True:
@@ -211,10 +192,6 @@ def nombre_variable_real(ds, candidatos):
 
 
 def abrir_dataset(archivos):
-    # parallel=True abre los .nc con varios hilos a la vez vía dask, pero la
-    # librería HDF5 detrás de netCDF4 no siempre es segura para eso y puede
-    # colgarse o reventar (segmentation fault) sin ni siquiera un error de
-    # Python. En serie es un poco más lento, pero confiable.
     return xr.open_mfdataset(archivos, combine="nested", concat_dim="time", parallel=False)
 
 
@@ -232,8 +209,7 @@ def extraer_serie_punto(archivos, var_candidatos, lat, lon):
 
 
 # ---------------------------------------------------------------------------
-# Geometrías de los municipios monitoreados (archivo estático del repo, no cambia
-# entre corridas — no hace falta bajarlo de Drive cada vez)
+# Geometrías de los municipios monitoreados 
 # ---------------------------------------------------------------------------
 
 import geopandas as gpd
@@ -262,8 +238,7 @@ def centroide(gdf_proj, nombre):
 def construir_grid_variable(archivos, gdf, nombre, var_candidates):
     """Recorta el ráster completo (de cualquier variable) al polígono del
     municipio y devuelve una celda por pixel, cada una con su propia serie
-    de tiempo. Generaliza lo que antes solo hacía construir_grid_precipitacion,
-    para poder usarlo también con temperatura y humedad relativa."""
+    de tiempo."""
     ds = abrir_dataset(archivos)
     ds = ds.rio.write_crs("EPSG:4326")
     if "lat" in ds.dims and "lon" in ds.dims:
@@ -306,9 +281,7 @@ VARIABLE_SHEET_A_CLAVE = {
 def leer_reportes_de_campo(creds, sheet_id):
     """Lee la hoja de Google Sheets que diligencian los productores/técnicos
     cada semana y la convierte al mismo formato que ya usa el dashboard
-    (datos.observaciones). Filas incompletas o con un municipio/variable que
-    no calza exactamente con lo esperado se ignoran silenciosamente (se
-    listan al final para que sea fácil detectar un typo en la hoja)."""
+    (datos.observaciones)."""
     gc = gspread.authorize(creds)
     hoja = gc.open_by_key(sheet_id).sheet1
     filas = hoja.get_all_records()
